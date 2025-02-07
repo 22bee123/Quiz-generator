@@ -7,18 +7,38 @@ export function QuizGenerator() {
     const [quiz, setQuiz] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [showAnswers, setShowAnswers] = useState(false);
+    const [file, setFile] = useState(null);
+    const [useFile, setUseFile] = useState(false);
 
     const generateQuiz = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
         setQuiz(null);
+        setShowAnswers(false);
 
         try {
-            const response = await axios.post('http://localhost:5000/api/generate-quiz', {
-                topic,
-                numberOfQuestions: parseInt(numberOfQuestions)
-            });
+            let response;
+            if (useFile && file) {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('numberOfQuestions', numberOfQuestions);
+
+                response = await axios.post('http://localhost:5000/api/generate-quiz-from-file', 
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
+                );
+            } else {
+                response = await axios.post('http://localhost:5000/api/generate-quiz', {
+                    topic,
+                    numberOfQuestions: parseInt(numberOfQuestions)
+                });
+            }
             
             if (response.data) {
                 setQuiz(response.data);
@@ -28,6 +48,14 @@ export function QuizGenerator() {
             setError(error.response?.data?.error || 'Failed to generate quiz. Please try again.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFileChange = (e) => {
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            setFile(selectedFile);
+            setTopic(selectedFile.name); // Set topic to filename by default
         }
     };
 
@@ -43,16 +71,59 @@ export function QuizGenerator() {
             
             <form onSubmit={generateQuiz} className="mb-6">
                 <div className="mb-4">
-                    <label className="block mb-2">Topic:</label>
-                    <input
-                        type="text"
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                        className="border p-2 w-full rounded"
-                        required
-                        disabled={loading}
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Generate questions from:
+                    </label>
+                    <div className="flex gap-4 mb-4">
+                        <button
+                            type="button"
+                            onClick={() => setUseFile(false)}
+                            className={`px-4 py-2 rounded ${!useFile 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200'}`}
+                        >
+                            Topic
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setUseFile(true)}
+                            className={`px-4 py-2 rounded ${useFile 
+                                ? 'bg-blue-500 text-white' 
+                                : 'bg-gray-200'}`}
+                        >
+                            File Upload
+                        </button>
+                    </div>
                 </div>
+
+                {!useFile ? (
+                    <div className="mb-4">
+                        <label className="block mb-2">Topic:</label>
+                        <input
+                            type="text"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            className="border p-2 w-full rounded"
+                            required
+                            disabled={loading}
+                        />
+                    </div>
+                ) : (
+                    <div className="mb-4">
+                        <label className="block mb-2">Upload File:</label>
+                        <input
+                            type="file"
+                            onChange={handleFileChange}
+                            className="border p-2 w-full rounded"
+                            accept=".txt,.pdf,.doc,.docx"
+                            required
+                            disabled={loading}
+                        />
+                        <p className="text-sm text-gray-500 mt-1">
+                            Supported formats: .txt, .pdf, .doc, .docx
+                        </p>
+                    </div>
+                )}
                 
                 <div className="mb-4">
                     <label className="block mb-2">Number of Questions:</label>
@@ -92,6 +163,33 @@ export function QuizGenerator() {
                             ))}
                         </div>
                     ))}
+
+                    {/* Toggle Answers Button */}
+                    <div className="mt-6 mb-4">
+                        <button
+                            onClick={() => setShowAnswers(!showAnswers)}
+                            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
+                        >
+                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
+                        </button>
+                    </div>
+
+                    {/* Answer Key Section */}
+                    {showAnswers && (
+                        <div className="answer-key bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 className="text-xl font-bold mb-3">Answer Key:</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {quiz.questions.map((q, index) => (
+                                    <div key={index} className="bg-white p-3 rounded shadow">
+                                        <span className="font-semibold">Question {index + 1}:</span>
+                                        <span className="ml-2 text-green-600 font-bold">
+                                            {q.correctAnswer}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
