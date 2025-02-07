@@ -8,37 +8,43 @@ const router = express.Router();
 router.post('/register', async (req, res) => {
     try {
         console.log('Registration attempt:', req.body);
-        const { name, email, password, age, userType } = req.body;
+        const { username, email, password, age, userType } = req.body;
 
-        if (!name || !email || !password || !age || !userType) {
+        // Validate required fields
+        if (!username || !email || !password || !age || !userType) {
             return res.status(400).json({ 
                 error: 'All fields are required',
-                received: { name, email, password: '***', age, userType }
+                received: { username, email, password: '***', age, userType }
             });
         }
 
-        if (name.length < 3 || name.length > 30) {
+        // Validate username format
+        if (username.length < 3 || username.length > 30) {
             return res.status(400).json({ 
                 error: 'Username must be between 3 and 30 characters'
             });
         }
 
-        // Check if username exists
-        const existingUsername = await UserModel.findOne({ name });
-        if (existingUsername) {
-            return res.status(400).json({ error: 'Username already taken' });
-        }
+        // Check for existing username or email
+        const existingUser = await UserModel.findOne({
+            $or: [
+                { username: username.trim().toLowerCase() },
+                { email: email.trim().toLowerCase() }
+            ]
+        });
 
-        // Check if user exists
-        const existingUser = await UserModel.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ error: 'Email already registered' });
+            return res.status(400).json({ 
+                error: existingUser.username === username.trim().toLowerCase() 
+                    ? 'Username already taken' 
+                    : 'Email already registered'
+            });
         }
 
-        // Create new user
+        // Create new user with trimmed values
         const user = new UserModel({
-            name,
-            email,
+            username: username.trim(),
+            email: email.trim().toLowerCase(),
             password,
             age: Number(age),
             userType
@@ -58,7 +64,7 @@ router.post('/register', async (req, res) => {
             token,
             user: {
                 id: user._id,
-                name: user.name,
+                username: user.username,
                 email: user.email,
                 age: user.age,
                 userType: user.userType
@@ -66,6 +72,15 @@ router.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
+        
+        // Handle duplicate key errors specifically
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern)[0];
+            return res.status(400).json({
+                error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`
+            });
+        }
+
         res.status(500).json({ 
             error: error.message,
             details: 'Registration failed'
@@ -110,7 +125,7 @@ router.post('/login', async (req, res) => {
             token,
             user: {
                 id: user._id,
-                name: user.name,
+                username: user.username,
                 email: user.email,
                 age: user.age,
                 userType: user.userType

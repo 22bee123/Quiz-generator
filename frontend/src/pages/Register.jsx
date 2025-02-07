@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export function Register() {
     const [formData, setFormData] = useState({
-        name: '',
+        username: '',
         email: '',
         password: '',
         age: '',
@@ -30,7 +30,7 @@ export function Register() {
         setError('');
         
         // Validate username as user types
-        if (name === 'name') {
+        if (name === 'username') {
             const usernameError = validateUsername(value);
             if (usernameError) {
                 setError(usernameError);
@@ -41,7 +41,14 @@ export function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+            // Trim values before sending
+            const trimmedData = {
+                ...formData,
+                username: formData.username.trim(),
+                email: formData.email.trim().toLowerCase()
+            };
+
+            const response = await axios.post('http://localhost:5000/api/auth/register', trimmedData);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             navigate('/');
@@ -63,11 +70,11 @@ export function Register() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-gray-700 mb-2">Name</label>
+                        <label className="block text-gray-700 mb-2">Username</label>
                         <input
                             type="text"
-                            name="name"
-                            value={formData.name}
+                            name="username"
+                            value={formData.username}
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
                             pattern="^[a-zA-Z0-9_]+$"
