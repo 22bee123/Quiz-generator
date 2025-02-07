@@ -13,9 +13,9 @@ export function Register() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const validateUsername = (username) => {
-        if (username.length < 3) return 'Username must be at least 3 characters long';
-        if (username.length > 30) return 'Username cannot exceed 30 characters';
+    const validateName = (name) => {
+        if (name.length < 3) return 'Name must be at least 3 characters long';
+        if (name.length > 30) return 'Name cannot exceed 30 characters';
         return '';
     };
 
@@ -29,11 +29,11 @@ export function Register() {
         // Clear error when user starts typing
         setError('');
         
-        // Validate username as user types
+        // Validate name as user types
         if (name === 'username') {
-            const usernameError = validateUsername(value);
-            if (usernameError) {
-                setError(usernameError);
+            const nameError = validateName(value);
+            if (nameError) {
+                setError(nameError);
             }
         }
     };
@@ -41,16 +41,13 @@ export function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Trim values before sending
-            const trimmedData = {
-                ...formData,
-                username: formData.username.trim(),
-                email: formData.email.trim().toLowerCase()
-            };
-
-            const response = await axios.post('http://localhost:5000/api/auth/register', trimmedData);
+            const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+            console.log('Registration response:', response.data); // Debug log
+            
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
+            
+            console.log('Stored user data:', response.data.user); // Debug log
             navigate('/');
         } catch (error) {
             setError(error.response?.data?.error || 'Registration failed');
@@ -77,10 +74,6 @@ export function Register() {
                             value={formData.username}
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
-                            pattern="^[a-zA-Z0-9_]+$"
-                            title="Username can only contain letters, numbers, and underscores"
-                            minLength="3"
-                            maxLength="30"
                             required
                         />
                     </div>

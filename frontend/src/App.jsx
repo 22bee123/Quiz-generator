@@ -3,6 +3,7 @@ import { QuizGenerator } from './page/QuizGenerator';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { EditProfile } from './components/EditProfile';
 
 function PrivateRoute({ children }) {
     const token = localStorage.getItem('token');
@@ -23,6 +24,11 @@ function App() {
                 <Route path="/profile" element={
                     <PrivateRoute>
                         <Profile />
+                    </PrivateRoute>
+                } />
+                <Route path="/edit-profile" element={
+                    <PrivateRoute>
+                        <EditProfile />
                     </PrivateRoute>
                 } />
             </Routes>

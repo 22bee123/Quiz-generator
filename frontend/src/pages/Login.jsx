@@ -11,26 +11,30 @@ export function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            if (!email || !password) {
-                setError('Email and password are required');
-                return;
-            }
+            console.log('Attempting login with:', { email }); // Debug log
 
             const response = await axios.post('http://localhost:5000/api/auth/login', {
                 email,
                 password
             });
 
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
+            console.log('Login response:', response.data); // Debug log
+
+            const { token, user } = response.data;
+            
+            // Store complete user data
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            
+            console.log('Stored in localStorage:', {
+                token,
+                user: JSON.parse(localStorage.getItem('user'))
+            }); // Debug log
+            
             navigate('/');
         } catch (error) {
             console.error('Login error:', error);
-            setError(
-                error.response?.data?.error || 
-                error.response?.data?.details || 
-                'Login failed. Please check your credentials.'
-            );
+            setError(error.response?.data?.error || 'Login failed');
         }
     };
 

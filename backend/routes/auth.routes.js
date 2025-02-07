@@ -10,7 +10,6 @@ router.post('/register', async (req, res) => {
         console.log('Registration attempt:', req.body);
         const { username, email, password, age, userType } = req.body;
 
-        // Validate required fields
         if (!username || !email || !password || !age || !userType) {
             return res.status(400).json({ 
                 error: 'All fields are required',
@@ -18,33 +17,28 @@ router.post('/register', async (req, res) => {
             });
         }
 
-        // Validate username format
         if (username.length < 3 || username.length > 30) {
             return res.status(400).json({ 
                 error: 'Username must be between 3 and 30 characters'
             });
         }
 
-        // Check for existing username or email
-        const existingUser = await UserModel.findOne({
-            $or: [
-                { username: username.trim().toLowerCase() },
-                { email: email.trim().toLowerCase() }
-            ]
+        // Check if username exists
+        const existingUser = await UserModel.findOne({ 
+            $or: [{ username }, { email }]
         });
-
         if (existingUser) {
             return res.status(400).json({ 
-                error: existingUser.username === username.trim().toLowerCase() 
+                error: existingUser.username === username 
                     ? 'Username already taken' 
-                    : 'Email already registered'
+                    : 'Email already registered' 
             });
         }
 
-        // Create new user with trimmed values
+        // Create new user
         const user = new UserModel({
-            username: username.trim(),
-            email: email.trim().toLowerCase(),
+            username,
+            email,
             password,
             age: Number(age),
             userType
@@ -53,7 +47,14 @@ router.post('/register', async (req, res) => {
         await user.save();
         console.log('User created successfully:', user._id);
 
-        // Generate token
+        const userData = {
+            id: user._id,
+            name: user.username,
+            email: user.email,
+            age: user.age,
+            userType: user.userType
+        };
+
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
@@ -62,25 +63,10 @@ router.post('/register', async (req, res) => {
 
         res.json({
             token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                age: user.age,
-                userType: user.userType
-            }
+            user: userData
         });
     } catch (error) {
         console.error('Registration error:', error);
-        
-        // Handle duplicate key errors specifically
-        if (error.code === 11000) {
-            const field = Object.keys(error.keyPattern)[0];
-            return res.status(400).json({
-                error: `${field.charAt(0).toUpperCase() + field.slice(1)} already exists`
-            });
-        }
-
         res.status(500).json({ 
             error: error.message,
             details: 'Registration failed'
@@ -91,52 +77,37 @@ router.post('/register', async (req, res) => {
 // Login
 router.post('/login', async (req, res) => {
     try {
-        console.log('Login attempt:', { email: req.body.email });
         const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ 
-                error: 'Email and password are required' 
-            });
-        }
-
-        // Find user
+        
         const user = await UserModel.findOne({ email });
-        if (!user) {
+        console.log('Found user during login:', user); // Debug log
+
+        if (!user || !(await user.comparePassword(password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        // Check password
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        console.log('Login successful for user:', user._id);
-
-        // Generate token
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
             { expiresIn: '24h' }
         );
 
+        const userData = {
+            id: user._id,
+            name: user.username,
+            email: user.email,
+            age: user.age,
+            userType: user.userType
+        };
+
+        console.log('Sending login response:', { token, user: userData }); // Debug log
         res.json({
             token,
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                age: user.age,
-                userType: user.userType
-            }
+            user: userData
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ 
-            error: error.message,
-            details: 'Login failed'
-        });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -149,15 +120,75 @@ router.get('/profile', async (req, res) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user = await UserModel.findById(decoded.userId)
-            .select('-password');
+        console.log('Decoded token:', decoded); // Debug log
+
+        const user = await UserModel.findById(decoded.userId);
+        console.log('Found user:', user); // Debug log
 
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json(user);
+        const userData = {
+            id: user._id,
+            name: user.username,
+            email: user.email,
+            age: user.age,
+            userType: user.userType
+        };
+
+        console.log('Sending user data:', userData); // Debug log
+        res.json(userData);
     } catch (error) {
+        console.error('Profile error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Update profile
+router.put('/profile', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await UserModel.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Verify current password if trying to change password
+        if (req.body.newPassword) {
+            if (!req.body.currentPassword) {
+                return res.status(400).json({ error: 'Current password is required' });
+            }
+            const isValidPassword = await user.comparePassword(req.body.currentPassword);
+            if (!isValidPassword) {
+                return res.status(401).json({ error: 'Current password is incorrect' });
+            }
+            user.password = req.body.newPassword;
+        }
+
+        // Update other fields
+        if (req.body.name) user.username = req.body.name;
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.age) user.age = req.body.age;
+
+        await user.save();
+
+        // Send updated user data
+        res.json({
+            id: user._id,
+            name: user.username,
+            email: user.email,
+            age: user.age,
+            userType: user.userType
+        });
+    } catch (error) {
+        console.error('Profile update error:', error);
         res.status(500).json({ error: error.message });
     }
 });

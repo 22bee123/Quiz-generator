@@ -12,8 +12,8 @@ import QuizModel from './model/quiz.model.js';
 import PDFParser from 'pdf2json';
 import mammoth from 'mammoth';
 import authRoutes from './routes/auth.routes.js';
-import mongoose from 'mongoose';
 import { authMiddleware } from './middleware/auth.middleware.js';
+import quizRoutes from './routes/quiz.routes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -29,13 +29,25 @@ try {
     await fs.mkdir(uploadsDir);
 }
 
-// CORS and middleware setup
+// More flexible CORS configuration for development
 app.use(cors({
-    origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    origin: function(origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if(!origin) return callback(null, true);
+        
+        // Allow localhost on any port
+        if(origin.startsWith('http://localhost:')) {
+            return callback(null, true);
+        }
+        
+        callback(new Error('Not allowed by CORS'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 }));
 app.use(express.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Initialize database
 QuizDatabase();
@@ -56,8 +68,9 @@ const storage = multer.diskStorage({
 const fileFilter = (req, file, cb) => {
     const allowedMimes = [
         'application/pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'text/plain'
+        'application/msword',
+        'text/plain',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ];
     
     if (allowedMimes.includes(file.mimetype)) {
@@ -221,9 +234,9 @@ app.post('/api/generate-quiz', authMiddleware, async (req, res) => {
 
         // Create and save the quiz
         const newQuiz = new QuizModel({
-            topic,
+            topic: req.body.topic,
             questions: parsedData.questions.map(shuffleOptions),
-            user: userId
+            user: req.user.userId
         });
 
         const savedQuiz = await newQuiz.save();
@@ -238,7 +251,7 @@ app.post('/api/generate-quiz', authMiddleware, async (req, res) => {
     }
 });
 
-// Generate quiz from file
+// Add back the file upload route
 app.post('/api/generate-quiz-from-file', authMiddleware, upload.single('file'), async (req, res) => {
     let filePath = null;
     try {
@@ -294,12 +307,12 @@ app.post('/api/generate-quiz-from-file', authMiddleware, upload.single('file'), 
 
         parsedData.questions = parsedData.questions.map(shuffleOptions);
 
-        const userId = req.user.userId; // Get userId from auth middleware
+        const userId = req.user.userId;
         
         const newQuiz = new QuizModel({
             topic: req.file.originalname,
             questions: parsedData.questions,
-            user: userId  // Add the user ID here
+            user: userId
         });
 
         const savedQuiz = await newQuiz.save();
@@ -326,16 +339,6 @@ app.post('/api/generate-quiz-from-file', authMiddleware, upload.single('file'), 
     }
 });
 
-// Get all quizzes
-app.get('/api/quizzes', async (req, res) => {
-    try {
-        const quizzes = await QuizModel.find().sort({ createdAt: -1 });
-        res.json(quizzes);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
 // Add error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
@@ -344,6 +347,21 @@ app.use((err, req, res, next) => {
 
 // Add the auth routes
 app.use('/api/auth', authRoutes);
+
+// Add a route to get user's quizzes
+app.get('/api/quizzes', authMiddleware, async (req, res) => {
+    try {
+        const quizzes = await QuizModel.find({ user: req.user.userId })
+            .sort({ createdAt: -1 })
+            .limit(10); // Limit to most recent 10 quizzes
+        res.json(quizzes);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Add quiz routes
+app.use('/api/quiz', quizRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

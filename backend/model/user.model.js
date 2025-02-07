@@ -1,32 +1,17 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-// Drop existing indexes before creating new schema
-const dropIndexes = async () => {
-    try {
-        await mongoose.connection.collection('users').dropIndexes();
-    } catch (error) {
-        console.log('No indexes to drop');
-    }
-};
-
-dropIndexes();
-
 const UserSchema = new mongoose.Schema({
     username: {
         type: String,
         required: true,
-        unique: true,
-        trim: true,
         minlength: [3, 'Username must be at least 3 characters long'],
         maxlength: [30, 'Username cannot exceed 30 characters']
     },
     email: {
         type: String,
         required: true,
-        unique: true,
-        trim: true,
-        lowercase: true
+        unique: true
     },
     password: {
         type: String,
@@ -42,16 +27,8 @@ const UserSchema = new mongoose.Schema({
         required: true
     },
     quizzes: [{
-        topic: String,
-        questions: [{
-            question: String,
-            options: [String],
-            correctAnswer: String
-        }],
-        createdAt: {
-            type: Date,
-            default: Date.now
-        }
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Quiz'
     }],
     createdAt: {
         type: Date,
@@ -70,9 +47,6 @@ UserSchema.pre('save', async function(next) {
 UserSchema.methods.comparePassword = async function(candidatePassword) {
     return await bcrypt.compare(candidatePassword, this.password);
 };
-
-// Remove any existing model to prevent duplicate model error
-mongoose.models = {};
 
 const UserModel = mongoose.model('User', UserSchema);
 export default UserModel; 
