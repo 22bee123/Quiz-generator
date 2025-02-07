@@ -11,6 +11,8 @@ import QuizDatabase from './db/Quiz.Database.js';
 import QuizModel from './model/quiz.model.js';
 import PDFParser from 'pdf2json';
 import mammoth from 'mammoth';
+import authRoutes from './routes/auth.routes.js';
+import mongoose from 'mongoose';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -298,6 +300,15 @@ app.get('/api/quizzes', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Add error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: err.message || 'Something went wrong!' });
+});
+
+// Add the auth routes
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

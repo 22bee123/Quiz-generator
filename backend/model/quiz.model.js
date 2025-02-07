@@ -15,6 +15,11 @@ const QuestionSchema = new mongoose.Schema({
 const QuizSchema = new mongoose.Schema({
     topic: String,
     questions: [QuestionSchema],
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     createdAt: {
         type: Date,
         default: Date.now
