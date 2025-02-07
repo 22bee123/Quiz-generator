@@ -63,12 +63,10 @@ export function QuizGenerator() {
         e.preventDefault();
         setLoading(true);
         setError(null);
-
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                navigate('/login');
-                return;
+                throw new Error('No authentication token found');
             }
 
             let response;
@@ -90,18 +88,27 @@ export function QuizGenerator() {
             } else {
                 response = await axios.post(
                     'http://localhost:5000/api/generate-quiz',
-                    { topic, numberOfQuestions },
+                    {
+                        topic,
+                        numberOfQuestions: parseInt(numberOfQuestions)
+                    },
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
             }
-
-            setQuiz(response.data);
-            setQuizHistory(prev => [response.data, ...prev]);
+            
+            if (response.data) {
+                setQuiz(response.data);
+                setQuizHistory(prev => [response.data, ...prev]);
+                setError(null);
+            }
         } catch (error) {
             console.error('Error generating quiz:', error);
             setError(error.response?.data?.error || 'Failed to generate quiz');
+            if (error.message === 'No authentication token found') {
+                navigate('/login');
+            }
         } finally {
             setLoading(false);
         }
