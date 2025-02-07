@@ -1,9 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
     const [isOpen, setIsOpen] = useState(true);
+    const [user, setUser] = useState(null);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Get user data from localStorage when component mounts
+        const userData = localStorage.getItem('user');
+        if (userData) {
+            setUser(JSON.parse(userData));
+        }
+    }, []);
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -18,6 +27,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setUser(null);
         navigate('/login');
     };
 
@@ -57,8 +67,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                 <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 opacity-80"></div>
                             </div>
                             <div className="text-white/90">
-                                <h3 className="font-bold">User Name</h3>
-                                <p className="text-sm text-white/60">user@email.com</p>
+                                <h3 className="font-bold">{user?.username || 'Guest'}</h3>
+                                <p className="text-sm text-white/60">{user?.email || 'Not logged in'}</p>
                             </div>
                         </>
                     )}

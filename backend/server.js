@@ -13,6 +13,7 @@ import PDFParser from 'pdf2json';
 import mammoth from 'mammoth';
 import authRoutes from './routes/auth.routes.js';
 import mongoose from 'mongoose';
+import { authMiddleware } from './middleware/auth.middleware.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -77,7 +78,8 @@ const upload = multer({
 // Helper function to shuffle options
 function shuffleOptions(question) {
     const options = Object.entries(question.options);
-    const correctOption = options[0];
+    const correctAnswer = question.correctAnswer;
+    const correctOptionValue = question.options[correctAnswer];
     
     for (let i = options.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -90,7 +92,7 @@ function shuffleOptions(question) {
     
     options.forEach((option, index) => {
         shuffledOptions[optionKeys[index]] = option[1];
-        if (option === correctOption) {
+        if (option[1] === correctOptionValue) {
             newCorrectAnswer = optionKeys[index];
         }
     });
@@ -143,71 +145,101 @@ async function extractTextFromFile(filePath, mimeType) {
     }
 }
 
-// Generate quiz from topic
-app.post('/api/generate-quiz', async (req, res) => {
-    const { topic, numberOfQuestions } = req.body;
-    
-    if (!topic || !numberOfQuestions) {
-        return res.status(400).json({ error: 'Topic and number of questions are required' });
-    }
-    
+// Add this helper function at the top of the file
+const cleanAndParseJSON = (content) => {
     try {
+        // Remove any markdown code block syntax
+        content = content.replace(/```json\n?/g, '')
+                        .replace(/```\n?/g, '')
+                        .trim();
+        
+        // Try to find the JSON object
+        const jsonStart = content.indexOf('{');
+        const jsonEnd = content.lastIndexOf('}');
+        
+        if (jsonStart === -1 || jsonEnd === -1) {
+            throw new Error('No valid JSON found in response');
+        }
+        
+        // Extract just the JSON part
+        content = content.slice(jsonStart, jsonEnd + 1);
+        
+        // Parse and validate the structure
+        const parsed = JSON.parse(content);
+        
+        if (!parsed.questions || !Array.isArray(parsed.questions)) {
+            throw new Error('Invalid quiz format');
+        }
+        
+        return parsed;
+    } catch (error) {
+        throw new Error(`Failed to parse quiz data: ${error.message}`);
+    }
+};
+
+// Update the quiz generation route
+app.post('/api/generate-quiz', authMiddleware, async (req, res) => {
+    try {
+        const { topic, numberOfQuestions } = req.body;
+        const userId = req.user.userId;
+
+        if (!topic || !numberOfQuestions) {
+            return res.status(400).json({ error: 'Topic and number of questions are required' });
+        }
+
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-        const prompt = `Generate an educational multiple choice quiz with ${numberOfQuestions} questions about ${topic}.
-            Return only a JSON object with this structure:
+        const prompt = `Generate an educational multiple choice quiz with exactly ${numberOfQuestions} questions about ${topic}.
+            Format the response as a JSON object with this exact structure:
             {
               "questions": [
                 {
-                  "question": "Write an educational question about ${topic}",
+                  "question": "Question text here",
                   "options": {
                     "A": "Correct answer",
-                    "B": "Incorrect option",
-                    "C": "Incorrect option",
-                    "D": "Incorrect option"
+                    "B": "Wrong answer",
+                    "C": "Wrong answer",
+                    "D": "Wrong answer"
                   },
                   "correctAnswer": "A"
                 }
               ]
-            }`;
+            }
+            Ensure the JSON is properly formatted with no trailing commas.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;
-        let content = response.text();
-
-        // Clean the response
-        content = content.replace(/```json\n?/g, '')
-                        .replace(/```\n?/g, '')
-                        .trim();
-
-        let parsedData = JSON.parse(content);
+        const content = response.text();
         
-        // Validate and shuffle questions
-        if (!parsedData.questions || !Array.isArray(parsedData.questions)) {
-            throw new Error('Invalid questions array structure');
+        // Clean and parse the response
+        const parsedData = cleanAndParseJSON(content);
+
+        // Validate questions
+        if (!parsedData.questions || parsedData.questions.length === 0) {
+            throw new Error('No questions generated');
         }
 
-        parsedData.questions = parsedData.questions.map(shuffleOptions);
-
+        // Create and save the quiz
         const newQuiz = new QuizModel({
             topic,
-            questions: parsedData.questions
+            questions: parsedData.questions.map(shuffleOptions),
+            user: userId
         });
 
         const savedQuiz = await newQuiz.save();
         res.json(savedQuiz);
 
     } catch (error) {
-        console.error('Server error:', error);
+        console.error('Quiz generation error:', error);
         res.status(500).json({ 
-            error: 'Server error', 
-            message: error.message 
+            error: 'Failed to generate quiz', 
+            details: error.message 
         });
     }
 });
 
 // Generate quiz from file
-app.post('/api/generate-quiz-from-file', upload.single('file'), async (req, res) => {
+app.post('/api/generate-quiz-from-file', authMiddleware, upload.single('file'), async (req, res) => {
     let filePath = null;
     try {
         if (!req.file) {
@@ -262,9 +294,12 @@ app.post('/api/generate-quiz-from-file', upload.single('file'), async (req, res)
 
         parsedData.questions = parsedData.questions.map(shuffleOptions);
 
+        const userId = req.user.userId; // Get userId from auth middleware
+        
         const newQuiz = new QuizModel({
             topic: req.file.originalname,
-            questions: parsedData.questions
+            questions: parsedData.questions,
+            user: userId  // Add the user ID here
         });
 
         const savedQuiz = await newQuiz.save();

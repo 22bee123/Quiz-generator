@@ -13,38 +13,40 @@ export function Register() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
+    const validateUsername = (username) => {
+        if (username.length < 3) return 'Username must be at least 3 characters long';
+        if (username.length > 30) return 'Username cannot exceed 30 characters';
+        return '';
+    };
+
     const handleChange = (e) => {
+        const { name, value } = e.target;
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: value
         });
+        
+        // Clear error when user starts typing
+        setError('');
+        
+        // Validate username as user types
+        if (name === 'name') {
+            const usernameError = validateUsername(value);
+            if (usernameError) {
+                setError(usernameError);
+            }
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Validate age is a number
-            const parsedAge = parseInt(formData.age);
-            if (isNaN(parsedAge)) {
-                setError('Age must be a valid number');
-                return;
-            }
-
-            const response = await axios.post('http://localhost:5000/api/auth/register', {
-                ...formData,
-                age: parsedAge
-            });
-
+            const response = await axios.post('http://localhost:5000/api/auth/register', formData);
             localStorage.setItem('token', response.data.token);
             localStorage.setItem('user', JSON.stringify(response.data.user));
             navigate('/');
         } catch (error) {
-            console.error('Registration error:', error);
-            setError(
-                error.response?.data?.error || 
-                error.response?.data?.details || 
-                'Registration failed. Please try again.'
-            );
+            setError(error.response?.data?.error || 'Registration failed');
         }
     };
 
@@ -68,6 +70,10 @@ export function Register() {
                             value={formData.name}
                             onChange={handleChange}
                             className="w-full p-2 border rounded"
+                            pattern="^[a-zA-Z0-9_]+$"
+                            title="Username can only contain letters, numbers, and underscores"
+                            minLength="3"
+                            maxLength="30"
                             required
                         />
                     </div>

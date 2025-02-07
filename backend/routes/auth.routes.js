@@ -17,6 +17,18 @@ router.post('/register', async (req, res) => {
             });
         }
 
+        if (name.length < 3 || name.length > 30) {
+            return res.status(400).json({ 
+                error: 'Username must be between 3 and 30 characters'
+            });
+        }
+
+        // Check if username exists
+        const existingUsername = await UserModel.findOne({ name });
+        if (existingUsername) {
+            return res.status(400).json({ error: 'Username already taken' });
+        }
+
         // Check if user exists
         const existingUser = await UserModel.findOne({ email });
         if (existingUser) {

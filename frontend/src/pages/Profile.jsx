@@ -42,8 +42,8 @@ export function Profile() {
                 
                 <div className="space-y-4">
                     <div>
-                        <label className="font-bold text-gray-700">Name:</label>
-                        <p className="text-gray-600">{user.name}</p>
+                        <label className="font-bold text-gray-700">Username:</label>
+                        <p className="text-gray-600">{user.username}</p>
                     </div>
 
                     <div>

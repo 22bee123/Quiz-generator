@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Sidebar } from '../components/Sidebar';
+import { useNavigate } from 'react-router-dom';
 
 export function QuizGenerator() {
     const [topic, setTopic] = useState('');
@@ -13,15 +14,22 @@ export function QuizGenerator() {
     const [useFile, setUseFile] = useState(false);
     const [quizHistory, setQuizHistory] = useState([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const navigate = useNavigate();
 
     // Fetch quiz history when component mounts
     useEffect(() => {
         const fetchQuizHistory = async () => {
             try {
-                const response = await axios.get('http://localhost:5000/api/quizzes');
+                const token = localStorage.getItem('token');
+                const response = await axios.get('http://localhost:5000/api/quizzes', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
                 setQuizHistory(response.data);
             } catch (error) {
                 console.error('Error fetching quiz history:', error);
+                setError('Failed to fetch quiz history');
             }
         };
 
@@ -36,33 +44,62 @@ export function QuizGenerator() {
         setShowAnswers(false);
 
         try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
             let response;
+            
             if (useFile && file) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('numberOfQuestions', numberOfQuestions);
 
-                response = await axios.post('http://localhost:5000/api/generate-quiz-from-file', 
+                response = await axios.post(
+                    'http://localhost:5000/api/generate-quiz-from-file', 
                     formData,
                     {
                         headers: {
-                            'Content-Type': 'multipart/form-data'
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${token}`
                         }
                     }
                 );
             } else {
-                response = await axios.post('http://localhost:5000/api/generate-quiz', {
-                    topic,
-                    numberOfQuestions: parseInt(numberOfQuestions)
-                });
+                response = await axios.post(
+                    'http://localhost:5000/api/generate-quiz',
+                    {
+                        topic,
+                        numberOfQuestions: parseInt(numberOfQuestions)
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
             }
             
             if (response.data) {
+                if (!response.data.questions || response.data.questions.length === 0) {
+                    throw new Error('No questions were generated. Please try again.');
+                }
                 setQuiz(response.data);
+                // Clear any existing error
+                setError(null);
             }
         } catch (error) {
             console.error('Error generating quiz:', error);
-            setError(error.response?.data?.error || 'Failed to generate quiz. Please try again.');
+            setError(
+                error.response?.data?.details || 
+                error.response?.data?.error || 
+                error.message || 
+                'Failed to generate quiz. Please try again.'
+            );
+            if (error.message === 'No authentication token found') {
+                navigate('/login');
+            }
         } finally {
             setLoading(false);
         }
