@@ -233,12 +233,6 @@ export function QuizGenerator() {
                                         <h2 className="text-2xl font-bold text-gray-100">
                                             {quiz.topic}
                                         </h2>
-                                        <button
-                                            onClick={() => setShowAnswers(!showAnswers)}
-                                            className="btn-secondary"
-                                        >
-                                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
-                                        </button>
                                     </div>
                                 </div>
 
@@ -270,6 +264,30 @@ export function QuizGenerator() {
                                                     </div>
                                                 </div>
                                             </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Button to toggle answers */}
+                        <button
+                            onClick={() => setShowAnswers(!showAnswers)}
+                            className="btn-primary w-full"
+                        >
+                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
+                        </button>
+
+                        {/* Answers section with conditional rendering */}
+                        {showAnswers && (
+                            <div className="bg-gray-800 rounded-lg p-6 mt-4">
+                                <h3 className="text-xl font-bold text-white mb-4">Answers</h3>
+                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                                    {quiz.questions.map((q, i) => (
+                                        <div key={i} className="bg-gray-700/50 rounded-lg p-3">
+                                            <span className="text-gray-200">
+                                                Q{i + 1}: <span className="font-bold">Option {q.correctAnswer}</span>
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
