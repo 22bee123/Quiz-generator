@@ -348,14 +348,18 @@ app.use((err, req, res, next) => {
 // Add the auth routes
 app.use('/api/auth', authRoutes);
 
-// Add a route to get user's quizzes
+// Update the quiz history route to include more details
 app.get('/api/quizzes', authMiddleware, async (req, res) => {
     try {
         const quizzes = await QuizModel.find({ user: req.user.userId })
+            .select('topic questions createdAt') // Select only needed fields
             .sort({ createdAt: -1 })
             .limit(10); // Limit to most recent 10 quizzes
+        
+        console.log('Sending quiz history:', quizzes); // Debug log
         res.json(quizzes);
     } catch (error) {
+        console.error('Error fetching quizzes:', error);
         res.status(500).json({ error: error.message });
     }
 });

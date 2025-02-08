@@ -114,6 +114,42 @@ export function QuizGenerator() {
         }
     };
 
+    const fetchQuizHistory = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/login');
+                return;
+            }
+
+            const response = await axios.get('http://localhost:5000/api/quizzes', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            
+            console.log('Fetched quiz history:', response.data); // Debug log
+            setQuizHistory(response.data);
+        } catch (error) {
+            console.error('Error fetching quiz history:', error);
+            if (error.response?.status === 401) {
+                navigate('/login');
+            }
+        }
+    };
+
+    // Fetch quiz history on component mount and after generating a new quiz
+    useEffect(() => {
+        fetchQuizHistory();
+    }, []);
+
+    // Refresh quiz history after generating a new quiz
+    useEffect(() => {
+        if (quiz) {
+            fetchQuizHistory();
+        }
+    }, [quiz]);
+
     return (
         <div className="flex min-h-screen bg-[#343541]">
             <Sidebar 
