@@ -227,70 +227,68 @@ export function QuizGenerator() {
 
                         {/* Quiz Display */}
                         {quiz && (
-                            <div className="card">
-                                <div className="p-6 border-b border-gray-700">
-                                    <div className="flex justify-between items-center">
-                                        <h2 className="text-2xl font-bold text-gray-100">
-                                            {quiz.topic}
-                                        </h2>
+                            <div className="mt-8 space-y-8">
+                                {/* Quiz header with title and show answers button */}
+                                <div className="bg-gray-800 rounded-lg p-6">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-2xl font-bold text-white">Quiz: {quiz.topic}</h2>
+                                        <button
+                                            onClick={() => setShowAnswers(!showAnswers)}
+                                            className="btn-primary"
+                                        >
+                                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
+                                        </button>
                                     </div>
-                                </div>
-
-                                <div className="p-6 space-y-8">
-                                    {quiz.questions.map((q, i) => (
-                                        <div key={i} className="space-y-4">
-                                            <div className="flex items-start gap-4">
-                                                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
-                                                    {i + 1}
-                                                </span>
-                                                <div className="flex-1">
-                                                    <p className="text-lg text-gray-100 mb-4">{q.question}</p>
-                                                    <div className="grid gap-3">
-                                                        {Object.entries(q.options).map(([key, value]) => (
-                                                            <div
-                                                                key={key}
-                                                                className={`p-3 rounded-lg border transition-colors duration-200
-                                                                    ${showAnswers && key === q.correctAnswer
-                                                                        ? 'bg-green-900/20 border-green-500/50 text-green-300'
-                                                                        : 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700'
-                                                                    }`}
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <span className="font-medium">{key}.</span>
-                                                                    <span>{value}</span>
+                                    
+                                    {/* Existing quiz questions display */}
+                                    <div className="space-y-8">
+                                        {quiz.questions.map((q, i) => (
+                                            <div key={i} className="space-y-4">
+                                                <div className="flex items-start gap-4">
+                                                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
+                                                        {i + 1}
+                                                    </span>
+                                                    <div className="flex-1">
+                                                        <p className="text-lg text-gray-100 mb-4">{q.question}</p>
+                                                        <div className="grid gap-3">
+                                                            {Object.entries(q.options).map(([key, value]) => (
+                                                                <div
+                                                                    key={key}
+                                                                    className={`p-3 rounded-lg border transition-colors duration-200
+                                                                        ${showAnswers && key === q.correctAnswer
+                                                                            ? 'bg-green-900/20 border-green-500/50 text-green-300'
+                                                                            : 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-center gap-3">
+                                                                        <span className="font-medium">{key}.</span>
+                                                                        <span>{value}</span>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ))}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
 
-                        {/* Button to toggle answers */}
-                        <button
-                            onClick={() => setShowAnswers(!showAnswers)}
-                            className="btn-primary w-full"
-                        >
-                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
-                        </button>
-
-                        {/* Answers section with conditional rendering */}
-                        {showAnswers && (
-                            <div className="bg-gray-800 rounded-lg p-6 mt-4">
-                                <h3 className="text-xl font-bold text-white mb-4">Answers</h3>
-                                <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-                                    {quiz.questions.map((q, i) => (
-                                        <div key={i} className="bg-gray-700/50 rounded-lg p-3">
-                                            <span className="text-gray-200">
-                                                Q{i + 1}: <span className="font-bold">Option {q.correctAnswer}</span>
-                                            </span>
+                                {/* Answers section */}
+                                {showAnswers && (
+                                    <div className="bg-gray-800 rounded-lg p-6 mt-4">
+                                        <h3 className="text-xl font-bold text-white mb-4">Answers</h3>
+                                        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                                            {quiz.questions.map((q, i) => (
+                                                <div key={i} className="bg-gray-700/50 rounded-lg p-3">
+                                                    <span className="text-gray-200">
+                                                        Q{i + 1}: <span className="font-bold">Option {q.correctAnswer}</span>
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
