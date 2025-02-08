@@ -6,17 +6,17 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(16, 185, 129, 0.1);  /* Light green track */
     border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgb(16, 185, 129);  /* Same green as buttons */
     border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgb(4, 120, 87);  /* Darker green on hover */
 }
 
 /* Add these new classes */
