@@ -152,13 +152,14 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     <div className="flex-1 overflow-hidden">
                         {isOpen ? (
                             <div className="px-4 py-2">
-                                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                <h3 className="text-md text-center font-semibold text-gray-400 uppercase tracking-wider mb-9">
                                     Recent Quizzes
                                 </h3>
-                                <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                                <div className="space-y-2 max-h-94 overflow-y-auto custom-scrollbar pr-2">
                                     {quizHistory && quizHistory.length > 0 ? (
                                         quizHistory.map((quiz) => (
                                             <button
+
                                                 key={quiz._id}
                                                 onClick={() => handleQuizClick(quiz)}
                                                 className="w-full text-left px-3 py-2 rounded-lg text-sm transition-colors duration-200
@@ -197,8 +198,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     <button
                         onClick={handleLogout}
                         className={`mt-4 ${isOpen ? 'w-full px-4' : 'w-8 h-8 mx-auto'} 
-                            py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-800 
-                            rounded-lg transition-colors duration-200 flex items-center justify-center`}
+                            py-2 text-sm text-gray-400 hover:text-white hover:bg-green-700  
+                            rounded-lg transition-colors   duration-200 flex items-center justify-center`}
                         title="Logout"
                     >
                         {isOpen ? (

@@ -151,7 +151,7 @@ export function QuizGenerator() {
     }, [quiz]);
 
     return (
-        <div className="flex min-h-screen bg-[#343541]">
+        <div className="flex min-h-screen bg-[#343541] items-center justify-center">
             <Sidebar 
                 quizHistory={quizHistory} 
                 onQuizSelect={setQuiz}
@@ -159,8 +159,20 @@ export function QuizGenerator() {
             />
             
             <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
+                <div className='flex items-center justify-center'>
+                    <div className='flex items-center justify-center bg-gray-800 rounded-4xl p-6 w-30%'>
+                        <h1 className='text-white text-6xl font-bold text-center mb-4 mt-4 tracking-wider' >Quiz Generator</h1>
+                    </div>
+                </div>
+
+                
+
+
+
                 <div className="max-w-4xl mx-auto p-6">
                     <div className="space-y-6">
+
+
                         {error && (
                             <div className="bg-red-500/10 border border-red-500/50 text-red-700 px-4 py-3 rounded">
                                 {error}
