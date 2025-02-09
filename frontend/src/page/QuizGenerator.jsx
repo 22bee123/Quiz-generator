@@ -157,7 +157,7 @@ export function QuizGenerator() {
                                         <div className="ml-4 space-y-2">
                                             {Object.entries(q.options).map(([key, value]) => (
                                                 <div key={key} className="flex items-center">
-                                                    <span className="font-bold mr-2">{key})</span>
+                                                    <span className="font-bold mr-2">{key}.</span>
                                                     <span>{value}</span>
                                                 </div>
                                             ))}

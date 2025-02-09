@@ -201,7 +201,7 @@ export function Register() {
                                         : '0 0 15px rgba(0, 15, 31, 0.8)',
                                 filter: 'blur(1px)',
                             }}
-                            className={`animate-float-${['', 'delayed', 'slow'][i % 3]}`}
+                          
                         />
                     ))}
                 </div>

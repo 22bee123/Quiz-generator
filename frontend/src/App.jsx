@@ -1,21 +1,24 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QuizGenerator } from './pages/QuizGenerator';
-import { Profile } from './pages/Profile';
+import { Profile } from './components/Profile';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { EditProfile } from './components/EditProfile';
+import Home from './pages/Home/Home';
 
 function PrivateRoute({ children }) {
     const token = localStorage.getItem('token');
-    return token ? children : <Navigate to="/login" />;
+    return token ? children : <Navigate to="/home" />;
 }
 
 function App() {
     return (
         <Router>
             <Routes>
+                <Route path="/home" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+
                 <Route path="/" element={
                     <PrivateRoute>
                         <QuizGenerator />

@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.0.4",
+    "@tsparticles/all": "^3.8.1",
+    "@tsparticles/react": "^3.0.0",
     "axios": "^1.7.9",
+    "gsap": "^3.12.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",

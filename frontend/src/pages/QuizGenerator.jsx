@@ -340,7 +340,7 @@ export function QuizGenerator() {
                             </div>
                         )}
                     </div>
-                </div>
+                </div> 
             </main>
         </div>
     );
