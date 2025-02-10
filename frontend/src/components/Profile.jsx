@@ -53,7 +53,7 @@ export function Profile() {
     }
 
     return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+        <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
             {/* Theme toggle button */}
             <button
                 onClick={toggleTheme}
@@ -77,7 +77,7 @@ export function Profile() {
             </button>
 
             <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg overflow-hidden`}>
+                <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} shadow-xl rounded-lg overflow-hidden`}>
                     {/* Profile Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-10 text-white">
                         <div className="flex items-center space-x-4">
@@ -100,21 +100,21 @@ export function Profile() {
                             {/* User Information */}
                             <div className="space-y-6">
                                 <div>
-                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         User Information
                                     </h2>
-                                    <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 space-y-4`}>
+                                    <div className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} rounded-lg p-4 space-y-4`}>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-500">Name</label>
-                                            <p className="mt-1 text-lg text-gray-800">{user?.name}</p>
+                                            <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Name</label>
+                                            <p className={`mt-1 text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.name}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-500">Email</label>
-                                            <p className="mt-1 text-lg text-gray-800">{user?.email}</p>
+                                            <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Email</label>
+                                            <p className={`mt-1 text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.email}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-500">Age</label>
-                                            <p className="mt-1 text-lg text-gray-800">{user?.age} years old</p>
+                                            <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Age</label>
+                                            <p className={`mt-1 text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.age} years old</p>
                                         </div>
                                     </div>
                                 </div>
@@ -123,18 +123,17 @@ export function Profile() {
                             {/* Account Details */}
                             <div className="space-y-6">
                                 <div>
-                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                         Account Details
                                     </h2>
-                                    <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 space-y-4`}>
+                                    <div className={`${isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'} rounded-lg p-4 space-y-4`}>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-500">Account Type</label>
-                                            <p className="mt-1 text-lg text-gray-800 capitalize">{user?.userType}</p>
+                                            <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Account Type</label>
+                                            <p className={`mt-1 text-lg capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}>{user?.userType}</p>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-500">Member Since</label>
-                                            {console.log('createdAt value:', user?.createdAt)}
-                                            <p className="mt-1 text-lg text-gray-800">
+                                            <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Member Since</label>
+                                            <p className={`mt-1 text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                                                     year: 'numeric',
                                                     month: 'long',
