@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 export function Profile() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -51,9 +53,31 @@ export function Profile() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto">
-                <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+        <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-100'}`}>
+            {/* Theme toggle button */}
+            <button
+                onClick={toggleTheme}
+                className="fixed top-4 right-4 z-50 p-2 rounded-full 
+                         bg-white/10 backdrop-blur-lg border border-white/20 
+                         hover:bg-white/20 transition-colors duration-200
+                         shadow-lg"
+                aria-label="Toggle theme"
+            >
+                {isDark ? (
+                    <svg className="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                ) : (
+                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                )}
+            </button>
+
+            <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} shadow-xl rounded-lg overflow-hidden`}>
                     {/* Profile Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-10 text-white">
                         <div className="flex items-center space-x-4">
@@ -76,8 +100,10 @@ export function Profile() {
                             {/* User Information */}
                             <div className="space-y-6">
                                 <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">User Information</h2>
-                                    <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                        User Information
+                                    </h2>
+                                    <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 space-y-4`}>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500">Name</label>
                                             <p className="mt-1 text-lg text-gray-800">{user?.name}</p>
@@ -97,20 +123,23 @@ export function Profile() {
                             {/* Account Details */}
                             <div className="space-y-6">
                                 <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-gray-800">Account Details</h2>
-                                    <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                                    <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                        Account Details
+                                    </h2>
+                                    <div className={`${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 space-y-4`}>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500">Account Type</label>
                                             <p className="mt-1 text-lg text-gray-800 capitalize">{user?.userType}</p>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500">Member Since</label>
+                                            {console.log('createdAt value:', user?.createdAt)}
                                             <p className="mt-1 text-lg text-gray-800">
-                                                {new Date(user?.createdAt).toLocaleDateString('en-US', {
+                                                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {
                                                     year: 'numeric',
                                                     month: 'long',
                                                     day: 'numeric'
-                                                })}
+                                                }) : 'Not available'}
                                             </p>
                                         </div>
                                     </div>
@@ -122,7 +151,10 @@ export function Profile() {
                         <div className="mt-8 flex justify-end space-x-4">
                             <button
                                 onClick={() => navigate('/')}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                                className={`px-4 py-2 border rounded-md transition-colors
+                                    ${isDark 
+                                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                             >
                                 Back to Dashboard
                             </button>

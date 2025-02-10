@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 export function EditProfile() {
     const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export function EditProfile() {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -119,58 +121,100 @@ export function EditProfile() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-2xl mx-auto">
-                <div className="bg-white shadow-xl rounded-lg overflow-hidden">
+        <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+            {/* Theme toggle button */}
+            <button
+                onClick={toggleTheme}
+                className="fixed top-4 right-4 z-50 p-2 rounded-full 
+                         bg-white/10 backdrop-blur-lg border border-white/20 
+                         hover:bg-white/20 transition-colors duration-200
+                         shadow-lg"
+                aria-label="Toggle theme"
+            >
+                {isDark ? (
+                    <svg className="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                ) : (
+                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                )}
+            </button>
+
+            <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+                <div className={`${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} shadow-xl rounded-lg overflow-hidden`}>
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-6 text-white">
                         <h1 className="text-2xl font-bold">Edit Profile</h1>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-8 space-y-6">
                         {error && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                            <div className={`p-4 rounded-md ${isDark ? 'bg-red-900/30 text-red-200' : 'bg-red-100 text-red-700'}`}>
                                 {error}
                             </div>
                         )}
                         {success && (
-                            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                            <div className={`p-4 rounded-md ${isDark ? 'bg-green-900/30 text-green-200' : 'bg-green-100 text-green-700'}`}>
                                 {success}
                             </div>
                         )}
 
                         {/* Basic Information */}
                         <div className="space-y-4">
-                            <h2 className="text-xl font-semibold text-gray-800">Basic Information</h2>
+                            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Basic Information
+                            </h2>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Name</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Name
+                                </label>
                                 <input
                                     type="text"
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Email</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Email
+                                </label>
                                 <input
                                     type="email"
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                     required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Age</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Age
+                                </label>
                                 <input
                                     type="number"
                                     name="age"
                                     value={formData.age}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                     required
                                 />
                             </div>
@@ -178,35 +222,55 @@ export function EditProfile() {
 
                         {/* Change Password */}
                         <div className="space-y-4">
-                            <h2 className="text-xl font-semibold text-gray-800">Change Password</h2>
+                            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                Change Password
+                            </h2>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Current Password</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Current Password
+                                </label>
                                 <input
                                     type="password"
                                     name="currentPassword"
                                     value={formData.currentPassword}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">New Password</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    New Password
+                                </label>
                                 <input
                                     type="password"
                                     name="newPassword"
                                     value={formData.newPassword}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                                <label className={`block text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Confirm New Password
+                                </label>
                                 <input
                                     type="password"
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                        ${isDark 
+                                            ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                                            : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
+                                        focus:border-blue-500 focus:ring-blue-500`}
                                 />
                             </div>
                         </div>
@@ -216,7 +280,10 @@ export function EditProfile() {
                             <button
                                 type="button"
                                 onClick={() => navigate('/profile')}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                                className={`px-4 py-2 border rounded-md transition-colors
+                                    ${isDark 
+                                        ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
                             >
                                 Cancel
                             </button>

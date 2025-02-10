@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
 
 export function Register() {
     const [formData, setFormData] = useState({
@@ -12,18 +13,7 @@ export function Register() {
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const [isDark, setIsDark] = useState(true);
-
-    // Check system preference on mount
-    useEffect(() => {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setIsDark(true);
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        setIsDark(!isDark);
-    };
+    const { isDark, toggleTheme } = useTheme();
 
     const validateName = (name) => {
         if (name.length < 3) return 'Name must be at least 3 characters long';

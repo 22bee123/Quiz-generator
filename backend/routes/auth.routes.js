@@ -134,7 +134,8 @@ router.get('/profile', async (req, res) => {
             name: user.username,
             email: user.email,
             age: user.age,
-            userType: user.userType
+            userType: user.userType,
+            createdAt: user.createdAt
         };
 
         console.log('Sending user data:', userData); // Debug log

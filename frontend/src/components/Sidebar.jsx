@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTheme } from '../context/ThemeContext';
 
 export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
     const [isOpen, setIsOpen] = useState(true);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const { isDark } = useTheme();
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -96,7 +98,10 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
 
             {/* Sidebar */}
             <div className={`fixed left-0 top-0 h-full transition-all duration-300 z-30
-                bg-gray-900 border-r border-gray-700
+                ${isDark 
+                    ? 'bg-gray-900 border-gray-700' 
+                    : 'bg-white border-gray-200'} 
+                border-r
                 ${isOpen ? 'w-64' : 'w-12'}
                 ${!isOpen && 'translate-x-0'}
                 md:translate-x-0`}
@@ -105,7 +110,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     {/* Toggle Button */}
                     <button 
                         onClick={toggleSidebar}
-                        className={`text-gray-400 hover:text-white transition-colors duration-200 mb-4
+                        className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} 
+                            transition-colors duration-200 mb-4
                             ${isOpen ? 'ml-auto' : 'mx-auto'}`}
                     >
                         {isOpen ? (
@@ -120,12 +126,18 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     </button>
 
                     {/* Navigation */}
-                    <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-900">
+                    <div className="flex-1 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         <NavLink
                             to="/"
                             className={({ isActive }) =>
                                 `flex items-center justify-center px-2 py-2 rounded-lg mb-2 transition-colors duration-200
-                                ${isActive ? 'bg-gray-700 text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'}`
+                                ${isActive 
+                                    ? isDark 
+                                        ? 'bg-gray-700 text-white' 
+                                        : 'bg-gray-100 text-gray-900'
+                                    : isDark 
+                                        ? 'text-gray-400 hover:bg-gray-800 hover:text-white' 
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`
                             }
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,19 +148,29 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
 
                         {/* Profile Section */}
                         <div className="mb-4 text-center">
-                            <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden bg-gray-800 border border-gray-700 transition-all duration-300`}>
+                            <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden 
+                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'} 
+                                border transition-all duration-300`}>
                                 <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
                                      style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
                                     {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
                                 </div>
                             </div>
                             {isOpen && (
-                                <div className="text-gray-200">
-                                    <h3 className="font-medium text-sm">{loading ? 'Loading...' : (user?.name || 'Guest')}</h3>
-                                    <p className="text-xs text-gray-400">{user?.userType || 'Student'}</p>
+                                <div className={isDark ? 'text-gray-200' : 'text-gray-900'}>
+                                    <h3 className="font-medium text-sm">
+                                        {loading ? 'Loading...' : (user?.name || 'Guest')}
+                                    </h3>
+                                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                        {user?.userType || 'Student'}
+                                    </p>
                                     <NavLink 
                                         to="/profile"
-                                        className="mt-2 text-base font-medium text-gray-400 hover:text-white transition-colors duration-200 block"
+                                        className={`mt-2 text-base font-medium 
+                                            ${isDark 
+                                                ? 'text-gray-400 hover:text-white' 
+                                                : 'text-gray-600 hover:text-gray-900'} 
+                                            transition-colors duration-200 block`}
                                     >
                                         View Profile
                                     </NavLink>
@@ -158,7 +180,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                 <NavLink 
                                     to="/profile"
                                     title="View Profile"
-                                    className="mt-1 text-gray-400 hover:text-white transition-colors duration-200 block"
+                                    className={`mt-1 text-gray-400 hover:text-white transition-colors duration-200 block`}
                                 >
                                     <svg className="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -170,7 +192,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         {/* Quiz History */}
                         <div className="px-1 flex flex-col items-center">
                             {isOpen && (
-                                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 text-center w-full">
+                                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 text-center w-full
+                                    ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Recent Quizzes
                                 </h3>
                             )}
@@ -181,7 +204,10 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                             key={quiz.id}
                                             onClick={() => handleQuizClick(quiz)}
                                             title={!isOpen ? quiz.topic : ''}
-                                            className={`flex items-center justify-center p-2 text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors duration-200
+                                            className={`flex items-center justify-center p-2 rounded-lg transition-colors duration-200
+                                                ${isDark 
+                                                    ? 'text-gray-400 hover:bg-gray-800 hover:text-white' 
+                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
                                                 ${isOpen ? 'w-full' : 'w-10'}`}
                                         >
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-800 ${isOpen ? 'mr-2' : ''}`}>
@@ -193,7 +219,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                         </button>
                                     ))
                                 ) : (
-                                    <div className="text-xs text-gray-500 text-center py-2">
+                                    <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} text-center py-2`}>
                                         {isOpen ? 'No quizzes yet' : '−'}
                                     </div>
                                 )}
@@ -204,7 +230,10 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     {/* Logout Button */}
                     <button
                         onClick={handleLogout}
-                        className="mt-2 flex items-center justify-center p-2 text-gray-400 hover:text-white hover:bg-emerald-600 rounded-lg transition-all duration-200 delay-200"
+                        className={`mt-2 flex items-center justify-center p-2 rounded-lg transition-all duration-200 delay-200
+                            ${isDark 
+                                ? 'text-gray-400 hover:text-white hover:bg-green-600' 
+                                : 'text-gray-600 hover:text-white hover:bg-green-500'}`}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

@@ -1,24 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+
+import Particles from '../components/Particles'
+import { useTheme } from '../context/ThemeContext';
+
 
 export function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const [isDark, setIsDark] = useState(true);
-
-    // Check system preference on mount
-    useEffect(() => {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setIsDark(true);
-        }
-    }, []);
-
-    const toggleTheme = () => {
-        setIsDark(!isDark);
-    };
+    const { isDark, toggleTheme } = useTheme();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -55,6 +48,7 @@ export function Login() {
             {/* Theme toggle button */}
             <button
                 onClick={toggleTheme}
+
                 className="absolute top-4 right-4 z-50 p-2 rounded-full 
                          bg-white/10 backdrop-blur-lg border border-white/20 
                          hover:bg-white/20 transition-colors duration-200

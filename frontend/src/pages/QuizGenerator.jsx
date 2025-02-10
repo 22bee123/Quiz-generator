@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Sidebar } from '../components/Sidebar';
+import { useTheme } from '../context/ThemeContext';
 
 export function QuizGenerator() {
     const [topic, setTopic] = useState('');
@@ -16,6 +17,7 @@ export function QuizGenerator() {
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
+    const { isDark, toggleTheme } = useTheme();
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -151,40 +153,64 @@ export function QuizGenerator() {
     }, [quiz]);
 
     return (
-        <div className="flex min-h-screen bg-[#343541] items-center justify-center">
+        <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+            {/* Add Theme toggle button */}
+            <button
+                onClick={toggleTheme}
+                className="fixed top-4 right-4 z-50 p-2 rounded-full 
+                         bg-white/10 backdrop-blur-lg border border-white/20 
+                         hover:bg-white/20 transition-colors duration-200
+                         shadow-lg"
+                aria-label="Toggle theme"
+            >
+                {isDark ? (
+                    // Sun icon for dark mode
+                    <svg className="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                ) : (
+                    // Moon icon for light mode
+                    <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                    </svg>
+                )}
+            </button>
+
             <Sidebar 
                 quizHistory={quizHistory} 
                 onQuizSelect={setQuiz}
                 onSidebarToggle={setIsSidebarOpen}
+                isDark={isDark}
             />
             
             <main className={`flex-1 transition-all duration-300 ${isSidebarOpen ? 'md:ml-64' : 'md:ml-16'}`}>
                 <div className='flex items-center justify-center'>
-                    <div className='flex items-center justify-center bg-gray-800 rounded-4xl p-6 w-30%'>
-                        <h1 className='text-white text-6xl font-bold text-center mb-4 mt-4 tracking-wider' >Quiz Generator</h1>
+                    <div className={`flex items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-white'} rounded-4xl p-6 w-30%`}>
+                        <h1 className={`${isDark ? 'text-white' : 'text-gray-900'} text-6xl font-bold text-center mb-4 mt-4 tracking-wider`}>
+                            Quiz Generator
+                        </h1>
                     </div>
                 </div>
-
-                
-
-
 
                 <div className="max-w-4xl mx-auto p-6">
                     <div className="space-y-6">
 
-
                         {error && (
-                            <div className="bg-red-500/10 border border-red-500/50 text-red-700 px-4 py-3 rounded">
+                            <div className={`${isDark ? 'bg-red-900/10 border-red-500/50 text-red-400' : 'bg-red-50 border-red-500 text-red-700'} px-4 py-3 rounded border`}>
                                 {error}
                             </div>
                         )}
 
-                        <form onSubmit={generateQuiz} className="bg-gray-800 rounded-lg p-6 space-y-4">
+                        <form onSubmit={generateQuiz} className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-4 shadow-lg`}>
                             <div 
                                 className={`border-2 border-dashed rounded-lg p-6 transition-colors
                                     ${isDragging 
-                                        ? 'border-green-500 bg-gray-800/50' 
-                                        : 'border-gray-600 hover:border-gray-500'}`}
+                                        ? 'border-green-500 bg-green-500/10' 
+                                        : isDark 
+                                            ? 'border-gray-600 hover:border-gray-500' 
+                                            : 'border-gray-300 hover:border-gray-400'}`}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}

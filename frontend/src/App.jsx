@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { EditProfile } from './components/EditProfile';
 import Home from './pages/Home/Home';
+import { ThemeProvider } from './context/ThemeContext';
 
 function PrivateRoute({ children }) {
     const token = localStorage.getItem('token');
@@ -13,29 +14,31 @@ function PrivateRoute({ children }) {
 
 function App() {
     return (
-        <Router>
-            <Routes>
-                <Route path="/home" element={<Home />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+        <ThemeProvider>
+            <Router>
+                <Routes>
+                    <Route path="/home" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
 
-                <Route path="/" element={
-                    <PrivateRoute>
-                        <QuizGenerator />
-                    </PrivateRoute>
-                } />
-                <Route path="/profile" element={
-                    <PrivateRoute>
-                        <Profile />
-                    </PrivateRoute>
-                } />
-                <Route path="/edit-profile" element={
-                    <PrivateRoute>
-                        <EditProfile />
-                    </PrivateRoute>
-                } />
-            </Routes>
-        </Router>
+                    <Route path="/" element={
+                        <PrivateRoute>
+                            <QuizGenerator />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/profile" element={
+                        <PrivateRoute>
+                            <Profile />
+                        </PrivateRoute>
+                    } />
+                    <Route path="/edit-profile" element={
+                        <PrivateRoute>
+                            <EditProfile />
+                        </PrivateRoute>
+                    } />
+                </Routes>
+            </Router>
+        </ThemeProvider>
     );
 }
 
