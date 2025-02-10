@@ -18,6 +18,7 @@ export function QuizGenerator() {
     const fileInputRef = useRef(null);
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
+    const [isCopied, setIsCopied] = useState(false);
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -152,8 +153,39 @@ export function QuizGenerator() {
         }
     }, [quiz]);
 
+    const copyQuizToClipboard = (quiz) => {
+        let quizText = `Quiz: ${quiz.topic}\n\n`;
+        
+        // Questions and options first
+        quizText += "Questions:\n\n";
+        quiz.questions.forEach((q, index) => {
+            quizText += `Question ${index + 1}: ${q.question}\n`;
+            Object.entries(q.options).forEach(([key, value]) => {
+                quizText += `${key}) ${value}\n`;
+            });
+            quizText += '\n';
+        });
+
+        // All answers at the end
+        quizText += "Answers:\n\n";
+        quiz.questions.forEach((q, index) => {
+            quizText += `Question ${index + 1}: ${q.correctAnswer}\n`;
+        });
+
+        navigator.clipboard.writeText(quizText)
+            .then(() => {
+                setIsCopied(true);
+                setTimeout(() => {
+                    setIsCopied(false);
+                }, 2000);
+            })
+            .catch(err => {
+                console.error('Failed to copy quiz:', err);
+            });
+    };
+
     return (
-        <div className={`min-h-screen ${isDark ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+        <div className={`min-h-screen ${isDark ? 'bg-[#262626] text-white' : 'bg-[#ddddd5] text-gray-900'}`}>
             {/* Add Theme toggle button */}
             <button
                 onClick={toggleTheme}
@@ -203,14 +235,14 @@ export function QuizGenerator() {
                             </div>
                         )}
 
-                        <form onSubmit={generateQuiz} className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-lg p-6 space-y-4 shadow-lg`}>
+                        <form onSubmit={generateQuiz} className={`${isDark ? 'bg-[#363636]' : 'bg-[#cecec7]'} rounded-lg p-6 space-y-4 shadow-lg`}>
                             <div 
                                 className={`border-2 border-dashed rounded-lg p-6 transition-colors
                                     ${isDragging 
                                         ? 'border-green-500 bg-green-500/10' 
                                         : isDark 
-                                            ? 'border-gray-600 hover:border-gray-500' 
-                                            : 'border-gray-300 hover:border-gray-400'}`}
+                                            ? 'border-gray-600 hover:border-gray-500 bg-[#262626]' 
+                                            : 'border-gray-400 hover:border-gray-300 bg-[#ddddd5]'}`}
                                 onDragOver={handleDragOver}
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
@@ -263,20 +295,30 @@ export function QuizGenerator() {
                                         type="text"
                                         value={topic}
                                         onChange={(e) => setTopic(e.target.value)}
-                                        className="chat-input"
+                                        className={`w-full px-3 py-2 rounded-md 
+                                                 ${isDark 
+                                                     ? 'bg-[#262626] border-gray-600 text-white placeholder-gray-400' 
+                                                     : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
+                                                 border focus:outline-none focus:ring-2 focus:ring-gray-500`}
                                         placeholder="Enter a topic for your quiz..."
                                         required
                                     />
                                 </div>
                                 <div className="w-full md:w-48">
-                                    <label className="block text-gray-300 mb-2">Questions</label>
+                                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        Questions
+                                    </label>
                                     <input
                                         type="number"
                                         value={numberOfQuestions}
                                         onChange={(e) => setNumberOfQuestions(e.target.value)}
                                         min="1"
                                         max="10"
-                                        className="chat-input"
+                                        className={`w-full px-3 py-2 rounded-md 
+                                                   ${isDark 
+                                                       ? 'bg-[#262626] border-gray-600 text-white' 
+                                                       : 'bg-[#ddddd5] border-gray-400 text-gray-900'} 
+                                                   border focus:outline-none focus:ring-2 focus:ring-gray-500`}
                                         required
                                     />
                                 </div>
@@ -301,37 +343,98 @@ export function QuizGenerator() {
 
                         {/* Quiz Display */}
                         {quiz && (
-                            <div className="mt-8 space-y-8">
+                            <div className={`mt-8 space-y-8 ${isDark ? 'bg-[#363636]' : 'bg-[#cecec7]'} rounded-lg p-6`}>
                                 {/* Quiz header with title and show answers button */}
-                                <div className="bg-gray-800 rounded-lg p-6">
+                                <div className={`${isDark ? 'bg-gray-800' : 'bg-[#ddddd5]'} rounded-lg p-6`}>
                                     <div className="flex justify-between items-center mb-6">
-                                        <h2 className="text-2xl font-bold text-white">Quiz: {quiz.topic}</h2>
-                                        <button
-                                            onClick={() => setShowAnswers(!showAnswers)}
-                                            className="btn-primary"
-                                        >
-                                            {showAnswers ? 'Hide Answers' : 'Show Answers'}
-                                        </button>
+                                        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            Quiz: {quiz.topic}
+                                        </h2>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => copyQuizToClipboard(quiz)}
+                                                className={`px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2
+                                                        ${isDark 
+                                                            ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                                                            : 'bg-[#cecec7] hover:bg-[#bebeb7] text-gray-900'}`}
+                                                title="Copy quiz to clipboard"
+                                            >
+                                                {isCopied ? (
+                                                    <>
+                                                        <svg 
+                                                            className="w-5 h-5" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path 
+                                                                strokeLinecap="round" 
+                                                                strokeLinejoin="round" 
+                                                                strokeWidth={2} 
+                                                                d="M5 13l4 4L19 7" 
+                                                            />
+                                                        </svg>
+                                                        Copied!
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <svg 
+                                                            className="w-5 h-5" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            viewBox="0 0 24 24"
+                                                        >
+                                                            <path 
+                                                                strokeLinecap="round" 
+                                                                strokeLinejoin="round" 
+                                                                strokeWidth={2} 
+                                                                d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" 
+                                                            />
+                                                        </svg>
+                                                        Copy
+                                                    </>
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => setShowAnswers(!showAnswers)}
+                                                className={`px-4 py-2 rounded-md transition-colors duration-200
+                                                        ${isDark 
+                                                            ? 'bg-green-600 hover:bg-green-700' 
+                                                            : 'bg-green-500 hover:bg-green-600'}
+                                                        text-white`}
+                                            >
+                                                {showAnswers ? 'Hide Answers' : 'Show Answers'}
+                                            </button>
+                                        </div>
                                     </div>
                                     
-                                    {/* Existing quiz questions display */}
+                                    {/* Questions display */}
                                     <div className="space-y-8">
                                         {quiz.questions.map((q, i) => (
                                             <div key={i} className="space-y-4">
                                                 <div className="flex items-start gap-4">
-                                                    <span className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm font-medium">
+                                                    <span className={`flex-shrink-0 w-8 h-8 rounded-full 
+                                                                 ${isDark ? 'bg-gray-700' : 'bg-[#cecec7]'} 
+                                                                 flex items-center justify-center text-sm font-medium
+                                                                 ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                         {i + 1}
                                                     </span>
                                                     <div className="flex-1">
-                                                        <p className="text-lg text-gray-100 mb-4">{q.question}</p>
+                                                        <p className={`text-lg mb-4 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                                                            {q.question}
+                                                        </p>
                                                         <div className="grid gap-3">
                                                             {Object.entries(q.options).map(([key, value]) => (
                                                                 <div
                                                                     key={key}
-                                                                    className={`p-3 rounded-lg border transition-colors duration-200
+                                                                    className={`p-3 rounded-lg border-2 border-gray-400 transition-colors duration-200
                                                                         ${showAnswers && key === q.correctAnswer
-                                                                            ? 'bg-green-900/20 border-green-500/50 text-green-300'
-                                                                            : 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700'
+                                                                            ? isDark 
+                                                                                ? 'bg-green-900/20 border-green-500/50 text-green-300'
+                                                                                : 'bg-green-100 border-green-500 text-green-800'
+                                                                            : isDark 
+                                                                                ? 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700'
+                                                                                : 'bg-[#ddddd5] border-gray-300 text-gray-800 hover:bg-[#cecec7]'
                                                                         }`}
                                                                 >
                                                                     <div className="flex items-center gap-3">
@@ -350,12 +453,14 @@ export function QuizGenerator() {
 
                                 {/* Answers section */}
                                 {showAnswers && (
-                                    <div className="bg-gray-800 rounded-lg p-6 mt-4">
-                                        <h3 className="text-xl font-bold text-white mb-4">Answers</h3>
+                                    <div className={`${isDark ? 'bg-gray-800' : 'bg-[#ddddd5]'} rounded-lg p-6 mt-4`}>
+                                        <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                                            Answers
+                                        </h3>
                                         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
                                             {quiz.questions.map((q, i) => (
-                                                <div key={i} className="bg-gray-700/50 rounded-lg p-3">
-                                                    <span className="text-gray-200">
+                                                <div key={i} className={`${isDark ? 'bg-gray-700/50' : 'bg-[#cecec7]'} rounded-lg p-3`}>
+                                                    <span className={isDark ? 'text-gray-200' : 'text-gray-800'}>
                                                         Q{i + 1}: <span className="font-bold">Option {q.correctAnswer}</span>
                                                     </span>
                                                 </div>

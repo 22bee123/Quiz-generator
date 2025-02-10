@@ -99,8 +99,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
             {/* Sidebar */}
             <div className={`fixed left-0 top-0 h-full transition-all duration-300 z-30
                 ${isDark 
-                    ? 'bg-gray-900 border-gray-700' 
-                    : 'bg-white border-gray-200'} 
+                    ? 'bg-[#262626] border-gray-700' 
+                    : 'bg-[#ddddd5] border-gray-200'} 
                 border-r
                 ${isOpen ? 'w-64' : 'w-12'}
                 ${!isOpen && 'translate-x-0'}
@@ -133,11 +133,11 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                 `flex items-center justify-center px-2 py-2 rounded-lg mb-2 transition-colors duration-200
                                 ${isActive 
                                     ? isDark 
-                                        ? 'bg-gray-700 text-white' 
-                                        : 'bg-gray-100 text-gray-900'
+                                        ? 'bg-[#363636] text-white' 
+                                        : 'bg-[#cecec7] text-gray-900'
                                     : isDark 
-                                        ? 'text-gray-400 hover:bg-gray-800 hover:text-white' 
-                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`
+                                        ? 'text-gray-400 hover:bg-[#363636] hover:text-white' 
+                                        : 'text-gray-600 hover:bg-[#cecec7] hover:text-gray-900'}`
                             }
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         {/* Profile Section */}
                         <div className="mb-4 text-center">
                             <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden 
-                                ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'} 
+                                ${isDark ? 'bg-[#363636] border-gray-700' : 'bg-[#cecec7] border-gray-200'} 
                                 border transition-all duration-300`}>
                                 <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
                                      style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
@@ -190,31 +190,42 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         </div>
 
                         {/* Quiz History */}
-                        <div className="px-1 flex flex-col items-center">
+                        <div className="px-1 flex flex-col items-center flex-grow h-[calc(100vh-300px)]">
                             {isOpen && (
-                                <h3 className={`text-xs font-semibold uppercase tracking-wider mb-2 text-center w-full
+                                <h3 className={`text-md pt-5 font-semibold uppercase tracking-wider mb-2 text-center w-full
                                     ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                                    Recent Quizzes
+                                    Recent Quizzes:
                                 </h3>
+                                
                             )}
-                            <div className="space-y-1 w-full flex flex-col items-center">
+                            
+                            <div className="space-y-1 w-full flex flex-col items-center h-full overflow-y-auto overflow-x-hidden
+                                    scrollbar-thin scrollbar-thumb-rounded-full
+                                    scrollbar-track-transparent
+                                    hover:scrollbar-thumb-gray-500/30
+                                    dark:hover:scrollbar-thumb-gray-400/30">
                                 {quizHistory && quizHistory.length > 0 ? (
                                     quizHistory.map((quiz) => (
                                         <button
                                             key={quiz.id}
                                             onClick={() => handleQuizClick(quiz)}
                                             title={!isOpen ? quiz.topic : ''}
-                                            className={`flex items-center justify-center p-2 rounded-lg transition-colors duration-200
+                                            className={`flex items-center p-2 rounded-lg transition-colors duration-200 w-full
                                                 ${isDark 
-                                                    ? 'text-gray-400 hover:bg-gray-800 hover:text-white' 
-                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
-                                                ${isOpen ? 'w-full' : 'w-10'}`}
+                                                    ? 'text-gray-400 hover:bg-[#363636] hover:text-white' 
+                                                    : 'text-gray-600 hover:bg-[#cecec7] hover:text-gray-900'}`}
                                         >
-                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-gray-800 ${isOpen ? 'mr-2' : ''}`}>
-                                                <span className="text-base font-medium">{quiz.topic.charAt(0).toUpperCase()}</span>
-                                            </div>
-                                            {isOpen && (
-                                                <span className="text-sm truncate">{quiz.topic}</span>
+                                            {isOpen ? (
+                                                <div className="flex flex-col flex-1">
+                                                    <span className="text-sm font-bold truncate">{quiz.topic}</span>
+                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
+                                                        {formatDate(quiz.createdAt)}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-center w-full">
+                                                    <span className="text-sm">{quiz.topic.charAt(0).toUpperCase()}</span>
+                                                </div>
                                             )}
                                         </button>
                                     ))

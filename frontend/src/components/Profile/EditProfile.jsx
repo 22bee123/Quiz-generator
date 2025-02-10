@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export function EditProfile() {
     const [formData, setFormData] = useState({
@@ -176,7 +176,7 @@ export function EditProfile() {
                                     name="name"
                                     value={formData.name}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
@@ -193,7 +193,7 @@ export function EditProfile() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
@@ -210,11 +210,12 @@ export function EditProfile() {
                                     name="age"
                                     value={formData.age}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
                                         focus:border-blue-500 focus:ring-blue-500`}
+
                                     required
                                 />
                             </div>
@@ -234,11 +235,12 @@ export function EditProfile() {
                                     name="currentPassword"
                                     value={formData.currentPassword}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
                                         focus:border-blue-500 focus:ring-blue-500`}
+
                                 />
                             </div>
                             <div>
@@ -250,11 +252,12 @@ export function EditProfile() {
                                     name="newPassword"
                                     value={formData.newPassword}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
                                         focus:border-blue-500 focus:ring-blue-500`}
+
                                 />
                             </div>
                             <div>
@@ -266,11 +269,12 @@ export function EditProfile() {
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className={`mt-1 block w-full rounded-md shadow-sm
+                                    className={`mt-1 block w-full rounded-md shadow-sm p-2
                                         ${isDark 
                                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                                             : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}
                                         focus:border-blue-500 focus:ring-blue-500`}
+
                                 />
                             </div>
                         </div>

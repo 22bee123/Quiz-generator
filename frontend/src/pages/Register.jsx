@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../context/ThemeContext';
+import ParticlesComponent from '../components/Particles/Particles';
 
 export function Register() {
     const [formData, setFormData] = useState({
@@ -58,6 +59,11 @@ export function Register() {
 
     return (
         <div className={`min-h-screen flex items-center justify-center relative overflow-hidden ${isDark ? 'dark' : ''}`}>
+            {/* Particles Background */}
+            <div className="absolute inset-0 z-0">
+                <ParticlesComponent id="tsparticles-register" />
+            </div>
+
             {/* Theme toggle button */}
             <button
                 onClick={toggleTheme}
@@ -82,155 +88,22 @@ export function Register() {
                 )}
             </button>
 
-            {/* Background with theme colors */}
-            <div className="absolute inset-0 transition-colors duration-200"
-                 style={{ 
-                     background: isDark 
-                         ? 'linear-gradient(135deg, #000a14 0%, #000f1f 40%, #004d40 100%)'
-                         : 'linear-gradient(135deg, #f0f9ff 0%, #e6f7ff 40%, #e6fff7 100%)'
-                 }}>
-                {/* Enhanced gradient layers with hues */}
-                <div className="absolute inset-0">
-                    {/* Luminous overlay */}
-                    <div 
-                        className="absolute inset-0"
-                        style={{
-                            background: 'radial-gradient(circle at 50% 50%, rgba(0, 77, 64, 0.15) 0%, transparent 60%)',
-                        }}
-                    />
-                    <div 
-                        className="absolute inset-0"
-                        style={{
-                            background: 'radial-gradient(circle at 80% 20%, rgba(0, 150, 136, 0.1) 0%, transparent 40%)',
-                        }}
-                    />
-                </div>
-
-                {/* Distorted gradient layers with highlights */}
-                <div className="absolute inset-0">
-                    <div 
-                        className="absolute inset-0"
-                        style={{
-                            background: 'linear-gradient(45deg, transparent 0%, rgba(0, 18, 32, 0.8) 50%, transparent 100%)',
-                            transform: 'skewY(-12deg)',
-                        }}
-                    />
-                    <div 
-                        className="absolute inset-0"
-                        style={{
-                            background: 'linear-gradient(-45deg, transparent 0%, rgba(0, 53, 45, 0.8) 50%, transparent 100%)',
-                            transform: 'skewY(12deg)',
-                        }}
-                    />
-                </div>
-
-                {/* Dynamic light effects with enhanced glow */}
-                <div className="absolute inset-0">
-                    <div 
-                        className="absolute top-0 right-0 w-1/2 h-full opacity-40"
-                        style={{
-                            background: 'linear-gradient(135deg, transparent, rgba(0, 77, 64, 0.3))',
-                            transform: 'skewX(-20deg) translateX(50%)',
-                            filter: 'blur(60px)',
-                        }}
-                    />
-                    <div 
-                        className="absolute -top-1/2 -right-1/2 w-full h-full opacity-20"
-                        style={{
-                            background: 'radial-gradient(circle, rgba(0, 150, 136, 0.2) 0%, transparent 60%)',
-                            filter: 'blur(80px)',
-                        }}
-                    />
-                    <div 
-                        className="absolute -bottom-1/2 -left-1/2 w-full h-full opacity-20"
-                        style={{
-                            background: 'radial-gradient(circle, rgba(0, 15, 31, 0.3) 0%, transparent 60%)',
-                            filter: 'blur(80px)',
-                        }}
-                    />
-                </div>
-
-                {/* Glowing orbs with enhanced luminosity */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <div className="absolute top-1/4 right-1/4 w-96 h-96 opacity-30 animate-pulse-slower"
-                         style={{
-                             background: 'radial-gradient(circle, rgba(0, 150, 136, 0.3) 0%, transparent 70%)',
-                             filter: 'blur(50px)',
-                             transform: 'skew(-10deg, 10deg)',
-                         }}
-                    />
-                    <div className="absolute bottom-1/3 left-1/3 w-96 h-96 opacity-30 animate-pulse-slow"
-                         style={{
-                             background: 'radial-gradient(circle, rgba(0, 77, 64, 0.3) 0%, transparent 70%)',
-                             filter: 'blur(50px)',
-                             transform: 'skew(10deg, -10deg)',
-                         }}
-                    />
-                </div>
-
-                {/* Ambient light particles with enhanced glow */}
-                <div className="absolute inset-0">
-                    {[...Array(12)].map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute rounded-full"
-                            style={{
-                                width: `${Math.random() * 4 + 1}px`,
-                                height: `${Math.random() * 4 + 1}px`,
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
-                                background: i % 3 === 0 
-                                    ? 'rgba(0, 150, 136, 0.6)' 
-                                    : i % 3 === 1 
-                                        ? 'rgba(0, 77, 64, 0.6)'
-                                        : 'rgba(0, 15, 31, 0.6)',
-                                boxShadow: i % 3 === 0 
-                                    ? '0 0 15px rgba(0, 150, 136, 0.8)' 
-                                    : i % 3 === 1
-                                        ? '0 0 15px rgba(0, 77, 64, 0.8)'
-                                        : '0 0 15px rgba(0, 15, 31, 0.8)',
-                                filter: 'blur(1px)',
-                            }}
-                          
-                        />
-                    ))}
-                </div>
-
-                {/* Highlight streaks */}
-                <div className="absolute inset-0 overflow-hidden">
-                    {[...Array(5)].map((_, i) => (
-                        <div
-                            key={`highlight-${i}`}
-                            className="absolute opacity-20"
-                            style={{
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
-                                width: '150px',
-                                height: '1px',
-                                background: 'linear-gradient(90deg, transparent, rgba(0, 150, 136, 0.8), transparent)',
-                                transform: `rotate(${Math.random() * 360}deg)`,
-                                filter: 'blur(2px)',
-                            }}
-                        />
-                    ))}
-                </div>
-            </div>
-
             {/* Register container with theme-aware styling */}
             <div className={`relative z-10 w-full max-w-md p-8 mx-4 
                           ${isDark 
-                              ? 'bg-gray-900/80 text-white' 
-                              : 'bg-white/80 text-black'} 
+                              ? 'bg-[#262626]/80 text-white' 
+                              : 'bg-[#ddddd5]/80 text-black'} 
                           backdrop-blur-lg rounded-xl shadow-2xl transition-colors duration-200`}>
                 <div className={`absolute inset-0 rounded-xl ${
                     isDark
-                        ? 'bg-gradient-to-r from-gray-900 to-gray-800 opacity-90'
-                        : 'bg-gradient-to-r from-white to-gray-50 opacity-90'
+                        ? 'bg-[#262626] opacity-90'
+                        : 'bg-[#ddddd5] opacity-90'
                 }`}></div>
                 <div className="relative z-10">
-                    <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-black'}`}>
-                        Register
+                    <h2 className={`text-3xl font-bold mb-2 text-center ${isDark ? 'text-white' : 'text-black'}`}>
+                        Welcome to our platform
                     </h2>
+                    <p className={`text-center text-gray-500 mb-6 ${isDark ? 'text-[ddddd5]' : 'text-[262626]'}`}> Create an account to get started</p>
                     
                     {error && (
                         <div className="bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded mb-4">

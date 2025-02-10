@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QuizGenerator } from './pages/QuizGenerator';
-import { Profile } from './components/Profile';
+import { Profile } from './components/Profile/Profile';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { EditProfile } from './components/EditProfile';
+import { EditProfile } from './components/Profile/EditProfile';
 import Home from './pages/Home/Home';
 import { ThemeProvider } from './context/ThemeContext';
 
