@@ -10,6 +10,9 @@ const ParticlesComponent = (props) => {
   const [init, setInit] = useState(false);
   const { isDark } = useTheme();
 
+  // Check if forceLight is true, if so, force light mode regardless of theme
+  const effectiveTheme = props.forceLight ? false : isDark;
+
   // this should be run only once per application lifetime
   useEffect(() => {
     initParticlesEngine(async (engine) => {
@@ -33,7 +36,7 @@ const ParticlesComponent = (props) => {
     () => ({
       background: {
         color: {
-          value: isDark ? "#262626" : "#ddddd5",
+          value: effectiveTheme ? "#262626" : "#ddddd5",
         },
       },
       fpsLimit: 120,
@@ -60,13 +63,13 @@ const ParticlesComponent = (props) => {
       },
       particles: {
         color: {
-          value: isDark ? "#ffffff" : "#262626",
+          value: effectiveTheme ? "#ffffff" : "#262626",
         },
         links: {
-          color: isDark ? "#ffffff" : "#262626",
+          color: effectiveTheme ? "#ffffff" : "#262626",
           distance: 150,
           enable: true,
-          opacity: isDark ? 0.3 : 0.4,
+          opacity: effectiveTheme ? 0.3 : 0.4,
           width: 1,
         },
         move: {
@@ -86,7 +89,7 @@ const ParticlesComponent = (props) => {
           value: 150,
         },
         opacity: {
-          value: isDark ? 0.8 : 0.5,
+          value: effectiveTheme ? 0.8 : 0.5,
         },
         shape: {
           type: "circle",
@@ -97,7 +100,7 @@ const ParticlesComponent = (props) => {
       },
       detectRetina: true,
     }),
-    [isDark],
+    [effectiveTheme],
   );
 
   if (init) {
