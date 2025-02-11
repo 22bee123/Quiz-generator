@@ -73,13 +73,17 @@ const fileFilter = (req, file, cb) => {
         'application/pdf',
         'application/msword',
         'text/plain',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'audio/wav',
+        'audio/mpeg',
+        'audio/mp3',
+        'audio/webm'
     ];
     
     if (allowedMimes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only PDF, DOCX, and TXT files are allowed.'));
+        cb(new Error('Invalid file type. Only PDF, DOCX, TXT, and audio files (WAV, MP3, WebM) are allowed.'));
     }
 };
 
@@ -424,6 +428,98 @@ app.post('/api/generate-quiz-from-url', authMiddleware, async (req, res) => {
         res.status(500).json({ 
             error: 'Failed to process video', 
             details: error.message 
+        });
+    }
+});
+
+// Add voice transcription endpoint
+app.post('/api/generate-quiz-from-voice', authMiddleware, upload.single('audio'), async (req, res) => {
+    let filePath = null;
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No audio file uploaded' });
+        }
+        filePath = req.file.path;
+        
+        // Set fixed number of questions to 5
+        const numberOfQuestions = 5;
+
+        // Initialize Gemini model
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        // First, transcribe the audio content
+        const audioBuffer = await fs.readFile(filePath);
+        const audioBase64 = audioBuffer.toString('base64');
+
+        // Use Gemini to transcribe and generate questions with fixed number
+        const transcriptionPrompt = `This is an audio recording. Please transcribe it and then generate exactly 5 multiple choice questions based on the content. Make sure the questions are relevant to the transcribed content. Return the response as a JSON object with this structure:
+        {
+          "transcription": "The transcribed text here",
+          "questions": [
+            {
+              "question": "Question based on the audio",
+              "options": {
+                "A": "Correct answer",
+                "B": "Incorrect option",
+                "C": "Incorrect option",
+                "D": "Incorrect option"
+              },
+              "correctAnswer": "A"
+            }
+          ]
+        }
+        Ensure there are exactly 5 questions in the response.`;
+
+        const result = await model.generateContent(transcriptionPrompt);
+        const response = await result.response;
+        const content = response.text();
+
+        // Clean and parse the response
+        const parsedData = cleanAndParseJSON(content);
+
+        // Verify we have exactly 5 questions
+        if (!parsedData.questions || parsedData.questions.length !== 5) {
+            throw new Error('Invalid number of questions generated');
+        }
+
+        // Create and save the quiz
+        const newQuiz = new QuizModel({
+            topic: 'Voice Recording Quiz',
+            questions: parsedData.questions.map(shuffleOptions),
+            user: req.user.userId
+        });
+
+        const savedQuiz = await newQuiz.save();
+
+        // Clean up uploaded file
+        await fs.unlink(filePath);
+
+        // Add logging to verify the quiz structure
+        console.log('Generated quiz data:', savedQuiz);
+
+        res.json({
+            quiz: {
+                topic: 'Voice Recording Quiz',
+                questions: savedQuiz.questions,
+                _id: savedQuiz._id,
+                createdAt: savedQuiz.createdAt
+            },
+            transcription: parsedData.transcription
+        });
+
+    } catch (error) {
+        console.error('Error processing audio:', error);
+        // Clean up file if it exists
+        if (filePath) {
+            try {
+                await fs.unlink(filePath);
+            } catch (unlinkError) {
+                console.error('Error deleting file:', unlinkError);
+            }
+        }
+        res.status(500).json({
+            error: 'Failed to process audio file',
+            message: error.message
         });
     }
 });

@@ -21,6 +21,9 @@ export function QuizGenerator() {
     const [isCopied, setIsCopied] = useState(false);
     const [videoUrl, setVideoUrl] = useState('');
     const [isProcessingVideo, setIsProcessingVideo] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState(null);
+    const mediaRecorderRef = useRef(null);
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -84,6 +87,38 @@ export function QuizGenerator() {
         }
     };
 
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            const audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                setAudioBlob(audioBlob);
+                stream.getTracks().forEach(track => track.stop());
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            setError('Could not access microphone. Please check permissions.');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            setIsRecording(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -97,7 +132,26 @@ export function QuizGenerator() {
 
             let response;
             
-            if (videoUrl) {
+            if (audioBlob) {
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+                
+                response = await axios.post(
+                    'http://localhost:5000/api/generate-quiz-from-voice',
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
+                // Extract quiz from the response structure
+                const quizData = response.data.quiz;
+                setQuiz(quizData);
+                setQuizHistory(prev => [quizData, ...prev]);
+                setAudioBlob(null); // Clear the audio blob after submission
+            } else if (videoUrl) {
                 setIsProcessingVideo(true);
                 response = await axios.post(
                     'http://localhost:5000/api/generate-quiz-from-url',
@@ -133,16 +187,14 @@ export function QuizGenerator() {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
-            } else {
-                throw new Error('Please provide either a video URL, file, or topic');
-            }
-            
-            if (response.data) {
                 setQuiz(response.data);
                 setQuizHistory(prev => [response.data, ...prev]);
-                setError(null);
-                setVideoUrl('');
+            } else {
+                throw new Error('Please provide either a voice recording, video URL, file, or topic');
             }
+            
+            setError(null);
+            setVideoUrl('');
         } catch (error) {
             console.error('Error generating quiz:', error);
             setError(error.response?.data?.error || error.message || 'Failed to generate quiz');
@@ -190,6 +242,15 @@ export function QuizGenerator() {
             fetchQuizHistory();
         }
     }, [quiz]);
+
+    useEffect(() => {
+        // Cleanup function to stop recording if component unmounts while recording
+        return () => {
+            if (mediaRecorderRef.current && isRecording) {
+                mediaRecorderRef.current.stop();
+            }
+        };
+    }, [isRecording]);
 
     const copyQuizToClipboard = (quiz) => {
         let quizText = `Quiz: ${quiz.topic}\n\n`;
@@ -274,6 +335,48 @@ export function QuizGenerator() {
                         )}
 
                         <form onSubmit={handleSubmit} className={`${isDark ? 'bg-[#363636]' : 'bg-[#cecec7]'} rounded-lg p-6 space-y-4 shadow-lg`}>
+                            {/* Add Voice Recording Button */}
+                            <div className="flex justify-center mb-4">
+                                <button
+                                    type="button"
+                                    onClick={isRecording ? stopRecording : startRecording}
+                                    className={`px-6 py-3 rounded-full flex items-center gap-2 transition-all duration-200
+                                        ${isRecording 
+                                            ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                                            : isDark 
+                                                ? 'bg-blue-600 hover:bg-blue-700' 
+                                                : 'bg-blue-500 hover:bg-blue-600'} 
+                                        text-white font-medium`}
+                                >
+                                    {isRecording ? (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <rect x="6" y="6" width="12" height="12" />
+                                            </svg>
+                                            Stop Recording
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                                      d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                                            </svg>
+                                            Audio
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {audioBlob && (
+                                <div className="flex items-center justify-center gap-2 mb-4">
+                                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                              d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span className="text-sm text-gray-400">Recording saved - ready to generate quiz</span>
+                                </div>
+                            )}
+
                             {/* Video URL Input */}
                             <div className="mb-4">
                                 <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
