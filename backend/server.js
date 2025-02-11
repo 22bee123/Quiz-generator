@@ -14,6 +14,9 @@ import mammoth from 'mammoth';
 import authRoutes from './routes/auth.routes.js';
 import { authMiddleware } from './middleware/auth.middleware.js';
 import quizRoutes from './routes/quiz.routes.js';
+import ytdl from 'ytdl-core';
+import { getSubtitles } from 'youtube-captions-scraper';
+import { Readable } from 'stream';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -335,6 +338,92 @@ app.post('/api/generate-quiz-from-file', authMiddleware, upload.single('file'), 
         res.status(500).json({ 
             error: 'Failed to process file', 
             message: error.message 
+        });
+    }
+});
+
+// Update the generate-quiz-from-url route
+app.post('/api/generate-quiz-from-url', authMiddleware, async (req, res) => {
+    try {
+        const { url, numberOfQuestions } = req.body;
+        
+        if (!url) {
+            return res.status(400).json({ error: 'URL is required' });
+        }
+
+        let videoText = '';
+        let videoTitle = '';
+
+        // Handle YouTube videos
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            const videoId = ytdl.getVideoID(url);
+            
+            try {
+                // Get video info
+                const videoInfo = await ytdl.getBasicInfo(url);
+                videoTitle = videoInfo.videoDetails.title;
+
+                // Get video captions/subtitles
+                const captions = await getSubtitles({
+                    videoID: videoId,
+                    lang: 'en' // default to English
+                });
+
+                videoText = captions.map(caption => caption.text).join(' ');
+            } catch (error) {
+                console.error('Error getting video data:', error);
+                throw new Error('Could not process video data');
+            }
+        }
+        // Add support for other platforms as needed
+
+        if (!videoText) {
+            throw new Error('No text content could be extracted from the video');
+        }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        const prompt = `Based on this video content, generate ${numberOfQuestions} multiple choice questions:
+            ${videoText.substring(0, 15000)} // Limit content length
+            
+            Return only a JSON object with this structure:
+            {
+              "questions": [
+                {
+                  "question": "Question based on the video",
+                  "options": {
+                    "A": "Correct answer",
+                    "B": "Incorrect option",
+                    "C": "Incorrect option",
+                    "D": "Incorrect option"
+                  },
+                  "correctAnswer": "A"
+                }
+              ]
+            }`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const content = response.text();
+        
+        // Clean and parse the response
+        const parsedData = cleanAndParseJSON(content);
+
+        // Create and save the quiz with video title
+        const newQuiz = new QuizModel({
+            topic: videoTitle || 'Video Quiz',
+            questions: parsedData.questions.map(shuffleOptions),
+            user: req.user.userId
+        });
+
+        const savedQuiz = await newQuiz.save();
+        res.json(savedQuiz);
+
+    } catch (error) {
+        console.error('Error processing video:', error);
+        res.status(500).json({ 
+            error: 'Failed to process video', 
+            details: error.message 
         });
     }
 });

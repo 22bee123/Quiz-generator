@@ -22,7 +22,9 @@
     "mammoth": "^1.9.0",
     "mongoose": "^8.10.0",
     "multer": "^1.4.5-lts.1",
-    "pdf2json": "^3.1.5"
+    "pdf2json": "^3.1.5",
+    "youtube-captions-scraper": "^2.0.3",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"

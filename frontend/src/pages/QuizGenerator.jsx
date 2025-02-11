@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Sidebar } from '../components/Sidebar';
+import { Sidebar } from '../components/Sidebar/Sidebar';
 import { useTheme } from '../context/ThemeContext';
 
 export function QuizGenerator() {
@@ -19,6 +19,8 @@ export function QuizGenerator() {
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
     const [isCopied, setIsCopied] = useState(false);
+    const [videoUrl, setVideoUrl] = useState('');
+    const [isProcessingVideo, setIsProcessingVideo] = useState(false);
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -49,9 +51,29 @@ export function QuizGenerator() {
     };
 
     const isValidFileType = (file) => {
-        const validTypes = ['application/pdf', 'application/msword', 'text/plain', 
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        const validTypes = [
+            'application/pdf', 
+            'application/msword', 
+            'text/plain',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'video/mp4',
+            'video/quicktime',
+            'video/x-msvideo',
+            'video/x-matroska'
+        ];
         return validTypes.includes(file.type);
+    };
+
+    const isValidUrl = (url) => {
+        try {
+            new URL(url);
+            // Basic check for video platforms
+            return url.includes('youtube.com') || 
+                   url.includes('youtu.be') || 
+                   url.includes('vimeo.com');
+        } catch {
+            return false;
+        }
     };
 
     const clearFile = () => {
@@ -62,10 +84,11 @@ export function QuizGenerator() {
         }
     };
 
-    const generateQuiz = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError(null);
+        
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -73,10 +96,21 @@ export function QuizGenerator() {
             }
 
             let response;
-            if (file) {
+            
+            if (videoUrl) {
+                setIsProcessingVideo(true);
+                response = await axios.post(
+                    'http://localhost:5000/api/generate-quiz-from-url',
+                    { url: videoUrl, numberOfQuestions },
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+            } else if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('numberOfQuestions', numberOfQuestions);
+                formData.append('isVideo', file.type.startsWith('video/'));
 
                 response = await axios.post(
                     'http://localhost:5000/api/generate-quiz-from-file',
@@ -88,7 +122,7 @@ export function QuizGenerator() {
                         }
                     }
                 );
-            } else {
+            } else if (topic) {
                 response = await axios.post(
                     'http://localhost:5000/api/generate-quiz',
                     {
@@ -99,21 +133,25 @@ export function QuizGenerator() {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
+            } else {
+                throw new Error('Please provide either a video URL, file, or topic');
             }
             
             if (response.data) {
                 setQuiz(response.data);
                 setQuizHistory(prev => [response.data, ...prev]);
                 setError(null);
+                setVideoUrl('');
             }
         } catch (error) {
             console.error('Error generating quiz:', error);
-            setError(error.response?.data?.error || 'Failed to generate quiz');
+            setError(error.response?.data?.error || error.message || 'Failed to generate quiz');
             if (error.message === 'No authentication token found') {
                 navigate('/login');
             }
         } finally {
             setLoading(false);
+            setIsProcessingVideo(false);
         }
     };
 
@@ -235,7 +273,33 @@ export function QuizGenerator() {
                             </div>
                         )}
 
-                        <form onSubmit={generateQuiz} className={`${isDark ? 'bg-[#363636]' : 'bg-[#cecec7]'} rounded-lg p-6 space-y-4 shadow-lg`}>
+                        <form onSubmit={handleSubmit} className={`${isDark ? 'bg-[#363636]' : 'bg-[#cecec7]'} rounded-lg p-6 space-y-4 shadow-lg`}>
+                            {/* Video URL Input */}
+                            <div className="mb-4">
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    Video URL (YouTube or Vimeo)
+                                </label>
+                                <input
+                                    type="url"
+                                    value={videoUrl}
+                                    onChange={(e) => {
+                                        setVideoUrl(e.target.value);
+                                        if (e.target.value) {
+                                            setFile(null);
+                                            setTopic('');
+                                        }
+                                    }}
+                                    placeholder="Paste video URL here..."
+                                    className={`w-full px-3 py-2 rounded-md 
+                                             ${isDark 
+                                                 ? 'bg-[#262626] border-gray-600 text-white placeholder-gray-400' 
+                                                 : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
+                                             border focus:outline-none focus:ring-2 focus:ring-gray-500`}
+                                />
+                            </div>
+
+                            <div className="text-center text-sm text-gray-500 my-2">- OR -</div>
+
                             <div 
                                 className={`border-2 border-dashed rounded-lg p-6 transition-colors
                                     ${isDragging 
@@ -278,15 +342,17 @@ export function QuizGenerator() {
                                                     type="file"
                                                     className="sr-only"
                                                     onChange={handleFileChange}
-                                                    accept=".pdf,.doc,.docx,.txt"
+                                                    accept=".pdf,.doc,.docx,.txt,.mp4,.mov,.avi,.mkv"
                                                 />
                                             </label>
                                             <p className="pl-1">or drag and drop</p>
                                         </div>
-                                        <p className="text-xs text-gray-500">PDF, DOC, DOCX or TXT up to 10MB</p>
+                                        <p className="text-xs text-gray-500">PDF, DOC, DOCX, TXT, MP4, MOV, AVI, MKV up to 100MB</p>
                                     </div>
                                 )}
                             </div>
+
+                            <div className="text-center text-sm text-gray-500 my-2">- OR -</div>
 
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1">
@@ -300,8 +366,7 @@ export function QuizGenerator() {
                                                      ? 'bg-[#262626] border-gray-600 text-white placeholder-gray-400' 
                                                      : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
                                                  border focus:outline-none focus:ring-2 focus:ring-gray-500`}
-                                        placeholder="Enter a topic for your quiz..."
-                                        required
+                                        placeholder="Enter a topic for your quiz... (optional)"
                                     />
                                 </div>
                                 <div className="w-full md:w-48">
