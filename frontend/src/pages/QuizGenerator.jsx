@@ -24,6 +24,7 @@ export function QuizGenerator() {
     const [isRecording, setIsRecording] = useState(false);
     const [audioBlob, setAudioBlob] = useState(null);
     const mediaRecorderRef = useRef(null);
+    const [isListening, setIsListening] = useState(false);
 
     const handleDragOver = (e) => {
         e.preventDefault();
@@ -117,6 +118,40 @@ export function QuizGenerator() {
             mediaRecorderRef.current.stop();
             setIsRecording(false);
         }
+    };
+
+    const handleVoiceRecognition = () => {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert('Speech recognition is not supported in this browser. Please use Chrome.');
+            return;
+        }
+
+        const recognition = new window.webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = () => {
+            setIsListening(true);
+            setTopic(''); // Clear existing topic
+        };
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            setTopic(transcript);
+            setNumberOfQuestions(5); // Set to generate 5 questions
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            setIsListening(false);
+        };
+
+        recognition.onend = () => {
+            setIsListening(false);
+        };
+
+        recognition.start();
     };
 
     const handleSubmit = async (e) => {
@@ -492,6 +527,37 @@ export function QuizGenerator() {
                                 </div>
                             </div>
                             
+                            {/* Voice Recognition Button */}
+                            <button 
+                                type="button"
+                                onClick={handleVoiceRecognition}
+                                className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition-colors duration-200 mb-4
+                                    ${isDark 
+                                        ? 'bg-blue-600 hover:bg-blue-700' 
+                                        : 'bg-blue-500 hover:bg-blue-600'}
+                                    text-white`}
+                                disabled={isListening}
+                            >
+                                {isListening ? (
+                                    <>
+                                        <div className="animate-pulse">Listening...</div>
+                                        <svg className="w-5 h-5 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                                        </svg>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Speak To Generate</span>
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                                        </svg>
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Existing Generate Quiz button */}
                             <button 
                                 type="submit"
                                 disabled={loading}
