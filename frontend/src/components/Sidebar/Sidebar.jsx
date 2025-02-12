@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,54 +10,60 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
     const navigate = useNavigate();
     const { isDark } = useTheme();
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                // First try to get user from localStorage
-                const storedUser = localStorage.getItem('user');
-                console.log('Stored user from localStorage:', storedUser); // Debug log
-
-                if (storedUser) {
-                    const parsedUser = JSON.parse(storedUser);
-                    console.log('Parsed user from localStorage:', parsedUser); // Debug log
-                    setUser(parsedUser);
-                }
-
-                // Then fetch fresh data from API
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    navigate('/login');
-                    return;
-                }
-
-                const response = await axios.get('http://localhost:5000/api/auth/profile', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                console.log('API response data:', response.data); // Debug log
-                setUser(response.data);
-                
-                // Update localStorage with fresh data
-                localStorage.setItem('user', JSON.stringify(response.data));
-            } catch (error) {
-                console.error('Error fetching profile:', error);
-                if (error.response?.status === 401) {d 
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    navigate('/login');
-                }
-            } finally {
-                setLoading(false);
+    // Define fetchProfile as a useCallback to avoid recreation on each render
+    const fetchProfile = useCallback(async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                navigate('/login');
+                return;
             }
-        };
 
+            // Fetch fresh data from API first
+            const response = await axios.get('http://localhost:5000/api/auth/profile', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            // Update state and localStorage with fresh data
+            setUser(response.data);
+            localStorage.setItem('user', JSON.stringify(response.data));
+            
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [navigate]);
+
+    // Initial load and mobile setup
+    useEffect(() => {
         fetchProfile();
 
         // Close sidebar on mobile by default
         if (window.innerWidth < 768) {
             setIsOpen(false);
         }
-    }, [navigate]);
+    }, [fetchProfile]);
+
+    // Add listener for profile updates
+    useEffect(() => {
+        const handleUserUpdate = () => {
+            console.log('Profile update detected, refreshing...');
+            fetchProfile();
+        };
+
+        window.addEventListener('userUpdated', handleUserUpdate);
+
+        return () => {
+            window.removeEventListener('userUpdated', handleUserUpdate);
+        };
+    }, [fetchProfile]);
 
     const toggleSidebar = () => {
         setIsOpen(!isOpen);
@@ -98,9 +104,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
 
             {/* Sidebar */}
             <div className={`fixed left-0 top-0 h-full transition-all duration-300 z-30
-                ${isDark 
-                    ? 'bg-[#262626] border-gray-700' 
-                    : 'bg-[#ddddd5] border-gray-200'} 
+                ${isDark ? 'bg-[#262626] border-gray-700' : 'bg-[#ddddd5] border-gray-200'} 
                 border-r
                 ${isOpen ? 'w-64' : 'w-12'}
                 ${!isOpen && 'translate-x-0'}
@@ -146,15 +150,34 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                             {isOpen && <span className="ml-2">Home</span>}
                         </NavLink>
 
-                        {/* Profile Section */}
-                        <div className="mb-4 text-center">
+                        {/* Profile Section with key for forcing re-render */}
+                        <div key={user?.profilePicture} className="mb-4 text-center">
                             <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden 
                                 ${isDark ? 'bg-[#363636] border-gray-700' : 'bg-[#cecec7] border-gray-200'} 
                                 border transition-all duration-300`}>
-                                <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
-                                     style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
-                                    {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
-                                </div>
+                                {user?.profilePicture ? (
+                                    <img
+                                        src={`http://localhost:5000${user.profilePicture}`}
+                                        alt={user.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            console.error('Image failed to load:', e);
+                                            e.target.onerror = null; // Prevent infinite loop
+                                            e.target.src = ''; // Clear the src
+                                            // Fallback to initial
+                                            e.target.parentElement.innerHTML = `
+                                                <div class="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
+                                                     style="font-size: ${isOpen ? '1.25rem' : '0.875rem'}">
+                                                    ${user.name ? user.name[0].toUpperCase() : '?'}
+                                                </div>`;
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
+                                         style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
+                                        {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
+                                    </div>
+                                )}
                             </div>
                             {isOpen && (
                                 <div className={isDark ? 'text-gray-200' : 'text-gray-900'}>
@@ -199,7 +222,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                 
                             )}
                             
-                            <div className="space-y-1 w-full flex flex-col items-center h-full overflow-y-auto overflow-x-hidden
+                            <div className="space-y-1 w-full flex flex-col i h-full overflow-y-auto overflow-x-hidden
                                     scrollbar-thin scrollbar-thumb-rounded-full
                                     scrollbar-track-transparent
                                     hover:scrollbar-thumb-gray-500/30
@@ -216,7 +239,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                                     : 'text-gray-600 hover:bg-[#cecec7] hover:text-gray-900'}`}
                                         >
                                             {isOpen ? (
-                                                <div className="flex flex-col flex-1">
+                                                <div className="flex flex-col items-start">
                                                     <span className="text-sm font-bold truncate">{quiz.topic}</span>
                                                     <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
                                                         {formatDate(quiz.createdAt)}

@@ -1,8 +1,50 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import UserModel from '../model/user.model.js';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const router = express.Router();
+
+// Configure multer for profile pictures
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, '..', 'uploads', 'profiles');
+        // Create directory if it doesn't exist
+        if (!existsSync(uploadDir)) {
+            fs.mkdir(uploadDir, { recursive: true })
+                .then(() => cb(null, uploadDir))
+                .catch(err => cb(err));
+        } else {
+            cb(null, uploadDir);
+        }
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        console.log('Processing file:', file);
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (allowedTypes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG and GIF allowed.'));
+        }
+    }
+});
 
 // Register
 router.post('/register', async (req, res) => {
@@ -135,6 +177,7 @@ router.get('/profile', async (req, res) => {
             email: user.email,
             age: user.age,
             userType: user.userType,
+            profilePicture: user.profilePicture,
             createdAt: user.createdAt
         };
 
@@ -147,8 +190,12 @@ router.get('/profile', async (req, res) => {
 });
 
 // Update profile
-router.put('/profile', async (req, res) => {
+router.put('/profile', upload.single('profilePicture'), async (req, res) => {
     try {
+        console.log('Profile update request received');
+        console.log('Request file:', req.file);
+        console.log('Request body:', req.body);
+
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
             return res.status(401).json({ error: 'No token provided' });
@@ -161,7 +208,32 @@ router.put('/profile', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        // Verify current password if trying to change password
+        // Handle profile picture update
+        if (req.file) {
+            console.log('Processing new profile picture');
+            // Delete old profile picture if it exists
+            if (user.profilePicture) {
+                try {
+                    const oldPath = path.join(__dirname, '..', user.profilePicture.replace(/^\//, ''));
+                    if (existsSync(oldPath)) {
+                        await fs.unlink(oldPath);
+                        console.log('Old profile picture deleted');
+                    }
+                } catch (error) {
+                    console.error('Error deleting old profile picture:', error);
+                }
+            }
+            // Update with new profile picture path
+            user.profilePicture = `/uploads/profiles/${req.file.filename}`;
+            console.log('New profile picture path:', user.profilePicture);
+        }
+
+        // Update other fields
+        if (req.body.name) user.username = req.body.name;
+        if (req.body.email) user.email = req.body.email;
+        if (req.body.age) user.age = req.body.age;
+
+        // Handle password update
         if (req.body.newPassword) {
             if (!req.body.currentPassword) {
                 return res.status(400).json({ error: 'Current password is required' });
@@ -173,21 +245,23 @@ router.put('/profile', async (req, res) => {
             user.password = req.body.newPassword;
         }
 
-        // Update other fields
-        if (req.body.name) user.username = req.body.name;
-        if (req.body.email) user.email = req.body.email;
-        if (req.body.age) user.age = req.body.age;
-
         await user.save();
+        console.log('User saved successfully');
 
-        // Send updated user data
-        res.json({
+        // Send back updated user data
+        const userResponse = {
             id: user._id,
             name: user.username,
             email: user.email,
             age: user.age,
-            userType: user.userType
-        });
+            userType: user.userType,
+            profilePicture: user.profilePicture,
+            createdAt: user.createdAt
+        };
+
+        console.log('Sending response:', userResponse);
+        res.json(userResponse);
+
     } catch (error) {
         console.error('Profile update error:', error);
         res.status(500).json({ error: error.message });

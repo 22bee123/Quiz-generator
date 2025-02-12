@@ -3,7 +3,6 @@ import cors from 'cors';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
 import multer from 'multer';
-import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -17,6 +16,7 @@ import quizRoutes from './routes/quiz.routes.js';
 import ytdl from 'ytdl-core';
 import { getSubtitles } from 'youtube-captions-scraper';
 import { Readable } from 'stream';
+import { existsSync, mkdirSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,33 +24,26 @@ const __dirname = dirname(__filename);
 dotenv.config();
 const app = express();
 
+// Enable CORS
+app.use(cors());
+
+// Body parser middleware
+app.use(express.json());
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-try {
-    await fs.access(uploadsDir);
-} catch {
-    await fs.mkdir(uploadsDir);
+const uploadsDir = path.join(__dirname, 'uploads', 'profiles');
+if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
 }
 
-// More flexible CORS configuration for development
-app.use(cors({
-    origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if(!origin) return callback(null, true);
-        
-        // Allow localhost on any port
-        if(origin.startsWith('http://localhost:')) {
-            return callback(null, true);
-        }
-        
-        callback(new Error('Not allowed by CORS'));
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-}));
-app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Log all requests for debugging
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path}`);
+    next();
+});
 
 // Initialize database
 QuizDatabase();

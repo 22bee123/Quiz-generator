@@ -81,8 +81,18 @@ export function Profile() {
                     {/* Profile Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-10 text-white">
                         <div className="flex items-center space-x-4">
-                            <div className="w-24 h-24 rounded-full bg-white/20 flex items-center justify-center text-4xl font-bold">
-                                {user?.name?.[0]?.toUpperCase()}
+                            <div className="w-24 h-24 rounded-full overflow-hidden bg-white/20">
+                                {user?.profilePicture ? (
+                                    <img
+                                        src={`http://localhost:5000${user.profilePicture}`}
+                                        alt={user.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-4xl font-bold">
+                                        {user?.name?.[0]?.toUpperCase()}
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <h1 className="text-3xl font-bold">{user?.name}</h1>
