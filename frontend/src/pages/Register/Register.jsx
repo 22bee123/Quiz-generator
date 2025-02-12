@@ -5,28 +5,46 @@ import { useTheme } from "../../context/ThemeContext";
 import ParticlesComponent from '../../components/Particles/Particles';
 
 export function Register() {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: '',
+        age: '',
+        userType: 'student' // default value
+    });
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
 
+    const handleChange = (e) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Validate age is a number and within reasonable range
+            const age = parseInt(formData.age);
+            if (isNaN(age) || age < 13 || age > 100) {
+                throw new Error('Please enter a valid age between 13 and 100');
+            }
+
             const response = await axios.post('http://localhost:5000/api/auth/register', {
-                email,
-                password
+                ...formData,
+                age: age // Send parsed age
             });
 
             const { token, user } = response.data;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             
-            navigate('/');
+            navigate('/quiz-generator');
         } catch (error) {
             console.error('Registration error:', error);
-            setError(error.response?.data?.error || 'Registration failed');
+            setError(error.response?.data?.error || error.message || 'Registration failed');
         }
     };
 
@@ -79,11 +97,31 @@ export function Register() {
 
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
+                            <label className={`block font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Username</label>
+                            <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleChange}
+                                className={`w-full px-3 py-2 rounded-md 
+                                         ${isDark 
+                                             ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' 
+                                             : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
+                                         border focus:outline-none focus:ring-2 focus:ring-gray-500`}
+                                placeholder="Enter your username"
+                                required
+                                minLength={3}
+                                maxLength={30}
+                            />
+                        </div>
+
+                        <div>
                             <label className={`block font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Email</label>
                             <input
                                 type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
                                 className={`w-full px-3 py-2 rounded-md 
                                          ${isDark 
                                              ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' 
@@ -98,8 +136,9 @@ export function Register() {
                             <label className={`block font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Password</label>
                             <input
                                 type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
                                 className={`w-full px-3 py-2 rounded-md 
                                          ${isDark 
                                              ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' 
@@ -108,6 +147,43 @@ export function Register() {
                                 placeholder="Enter your password"
                                 required
                             />
+                        </div>
+
+                        <div>
+                            <label className={`block font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>Age</label>
+                            <input
+                                type="number"
+                                name="age"
+                                value={formData.age}
+                                onChange={handleChange}
+                                className={`w-full px-3 py-2 rounded-md 
+                                         ${isDark 
+                                             ? 'bg-gray-800 border-gray-700 text-white placeholder-gray-400' 
+                                             : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
+                                         border focus:outline-none focus:ring-2 focus:ring-gray-500`}
+                                placeholder="Enter your age"
+                                required
+                                min="13"
+                                max="100"
+                            />
+                        </div>
+
+                        <div>
+                            <label className={`block font-medium mb-1 ${isDark ? 'text-white' : 'text-black'}`}>User Type</label>
+                            <select
+                                name="userType"
+                                value={formData.userType}
+                                onChange={handleChange}
+                                className={`w-full px-3 py-2 rounded-md 
+                                         ${isDark 
+                                             ? 'bg-gray-800 border-gray-700 text-white' 
+                                             : 'bg-[#ddddd5] border-gray-400 text-black'}
+                                         border focus:outline-none focus:ring-2 focus:ring-gray-500`}
+                                required
+                            >
+                                <option value="student">Student</option>
+                                <option value="teacher">Teacher</option>
+                            </select>
                         </div>
 
                         <button

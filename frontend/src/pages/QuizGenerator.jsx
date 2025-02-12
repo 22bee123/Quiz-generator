@@ -46,8 +46,10 @@ export function QuizGenerator() {
         const selectedFile = e.target.files[0];
         if (selectedFile && isValidFileType(selectedFile)) {
             setFile(selectedFile);
-            setTopic(selectedFile.name.replace(/\.[^/.]+$/, "")); // Remove file extension
+            setTopic('');
+            setVideoUrl('');
         }
+        setError(null);
     };
 
     const isValidFileType = (file) => {
@@ -84,8 +86,58 @@ export function QuizGenerator() {
         }
     };
 
+    const validateSingleInput = () => {
+        const hasUrl = videoUrl.trim() !== '';
+        const hasFile = file !== null;
+        const hasTopic = topic.trim() !== '';
+        
+        const filledInputs = [hasUrl, hasFile, hasTopic].filter(Boolean).length;
+        
+        if (filledInputs > 1) {
+            setError('Please provide only one input type: Video URL, File upload, or Topic');
+            return false;
+        }
+        if (filledInputs === 0) {
+            setError('Please provide one input type: Video URL, File upload, or Topic');
+            return false;
+        }
+        return true;
+    };
+
+    const handleVideoUrlChange = (e) => {
+        const value = e.target.value;
+        setVideoUrl(value);
+        if (value) {
+            setFile(null);
+            setTopic('');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+        setError(null);
+    };
+
+    const handleTopicChange = (e) => {
+        const value = e.target.value;
+        setTopic(value);
+        if (value) {
+            setFile(null);
+            setVideoUrl('');
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+        }
+        setError(null);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Validate single input before proceeding
+        if (!validateSingleInput()) {
+            return;
+        }
+        
         setLoading(true);
         setError(null);
         
@@ -282,13 +334,7 @@ export function QuizGenerator() {
                                 <input
                                     type="url"
                                     value={videoUrl}
-                                    onChange={(e) => {
-                                        setVideoUrl(e.target.value);
-                                        if (e.target.value) {
-                                            setFile(null);
-                                            setTopic('');
-                                        }
-                                    }}
+                                    onChange={handleVideoUrlChange}
                                     placeholder="Paste video URL here..."
                                     className={`w-full px-3 py-2 rounded-md 
                                              ${isDark 
@@ -360,13 +406,13 @@ export function QuizGenerator() {
                                     <input
                                         type="text"
                                         value={topic}
-                                        onChange={(e) => setTopic(e.target.value)}
+                                        onChange={handleTopicChange}
                                         className={`w-full px-3 py-2 rounded-md 
                                                  ${isDark 
                                                      ? 'bg-[#262626] border-gray-600 text-white placeholder-gray-400' 
                                                      : 'bg-[#ddddd5] border-gray-400 text-black placeholder-gray-500'}
                                                  border focus:outline-none focus:ring-2 focus:ring-gray-500`}
-                                        placeholder="Enter a topic for your quiz... (optional)"
+                                        placeholder="Enter a topic for your quiz..."
                                     />
                                 </div>
                                 <div className="w-full md:w-48">
