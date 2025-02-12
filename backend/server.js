@@ -206,7 +206,7 @@ app.post('/api/generate-quiz', authMiddleware, async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         const prompt = `Generate an educational multiple choice quiz with exactly ${numberOfQuestions} questions about ${topic}.
-            Format the response as a JSON object with this exact structure:
+            Format the response as a JSON object and make this structure as an example:
             {
               "questions": [
                 {
