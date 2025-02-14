@@ -162,9 +162,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                         className="w-full h-full object-cover"
                                         onError={(e) => {
                                             console.error('Image failed to load:', e);
-                                            e.target.onerror = null; // Prevent infinite loop
-                                            e.target.src = ''; // Clear the src
-                                            // Fallback to initial
+                                            e.target.onerror = null;
+                                            e.target.src = '';
                                             e.target.parentElement.innerHTML = `
                                                 <div class="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
                                                      style="font-size: ${isOpen ? '1.25rem' : '0.875rem'}">
