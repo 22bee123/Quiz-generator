@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useTheme } from "../../context/ThemeContext";
 import ParticlesComponent from '../../components/Particles/Particles';
 
-export function Login() {
+export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');

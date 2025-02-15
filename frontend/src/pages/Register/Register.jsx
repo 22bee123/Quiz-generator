@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useTheme } from "../../context/ThemeContext";
 import ParticlesComponent from '../../components/Particles/Particles';
 
-export function Register() {
+export default function Register() {
     const [formData, setFormData] = useState({
         username: '',
         email: '',

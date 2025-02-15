@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Sidebar } from '../components/Sidebar/Sidebar';
 import { useTheme } from '../context/ThemeContext';
 
-export function QuizGenerator() {
+export default function QuizGenerator() {
     const [topic, setTopic] = useState('');
     const [numberOfQuestions, setNumberOfQuestions] = useState(5);
     const [quiz, setQuiz] = useState(null);
@@ -93,6 +93,19 @@ export function QuizGenerator() {
         }
     };
 
+    const clearInputs = () => {
+        setTopic('');
+        setVideoUrl('');
+        setFile(null);
+        setNumberOfQuestions(5);
+        setError(null);
+        
+        // Clear file input if it exists
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
     const validateSingleInput = () => {
         const hasUrl = videoUrl.trim() !== '';
         const hasFile = file !== null;
@@ -140,72 +153,90 @@ export function QuizGenerator() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        // Validate single input before proceeding
         if (!validateSingleInput()) {
             return;
         }
         
         setLoading(true);
-        setError(null);
+        setError(null); // Clear any previous errors
         
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                throw new Error('No authentication token found');
+                navigate('/login');
+                return;
             }
 
             let response;
+            const baseURL = 'http://localhost:5000/api/quizzes';
             
-            if (videoUrl) {
-                setIsProcessingVideo(true);
-                response = await axios.post(
-                    'http://localhost:5000/api/generate-quiz-from-url',
-                    { url: videoUrl, numberOfQuestions },
-                    {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }
-                );
-            } else if (file) {
+            if (file) {
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('numberOfQuestions', numberOfQuestions);
-                formData.append('isVideo', file.type.startsWith('video/'));
-
-                response = await axios.post(
-                    'http://localhost:5000/api/generate-quiz-from-file',
-                    formData,
+                
+                response = await axios.post(`${baseURL}/generate-from-file`, 
+                    formData, 
                     {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                            'Authorization': `Bearer ${token}`
+                        headers: { 
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data'
                         }
                     }
                 );
-            } else if (topic) {
-                response = await axios.post(
-                    'http://localhost:5000/api/generate-quiz',
+            } else if (videoUrl) {
+                if (!isValidUrl(videoUrl)) {
+                    throw new Error('Please enter a valid YouTube URL');
+                }
+                
+                response = await axios.post(`${baseURL}/generate-from-url`, 
                     {
-                        topic,
-                        numberOfQuestions: parseInt(numberOfQuestions)
-                    },
+                        url: videoUrl,
+                        numberOfQuestions
+                    }, 
                     {
                         headers: { Authorization: `Bearer ${token}` }
                     }
                 );
             } else {
-                throw new Error('Please provide either a video URL, file, or topic');
+                if (!topic.trim()) {
+                    throw new Error('Please enter a topic');
+                }
+                
+                response = await axios.post(`${baseURL}/generate`, 
+                    {
+                        topic,
+                        numberOfQuestions
+                    }, 
+                    {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
             }
+
+            if (!response.data || !response.data.questions || !response.data.questions.length) {
+                throw new Error('Invalid quiz data received from server');
+            }
+
+            setQuiz(response.data);
+            await fetchQuizHistory();
+            clearInputs();
             
-            if (response.data) {
-                setQuiz(response.data);
-                setQuizHistory(prev => [response.data, ...prev]);
-                setError(null);
-                setVideoUrl('');
-            }
         } catch (error) {
             console.error('Error generating quiz:', error);
-            setError(error.response?.data?.error || error.message || 'Failed to generate quiz');
-            if (error.message === 'No authentication token found') {
+            let errorMessage = 'Failed to generate quiz. Please try again.';
+            
+            if (error.response?.data?.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.response?.data?.details) {
+                errorMessage = error.response.data.details;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            setError(errorMessage);
+            
+            if (error.response?.status === 401 || error.message === 'No authentication token found') {
                 navigate('/login');
             }
         } finally {
@@ -221,13 +252,12 @@ export function QuizGenerator() {
                 return;
             }
 
-            const response = await axios.get('http://localhost:5000/api/quizzes', {
+            const response = await axios.get('http://localhost:5000/api/quizzes/history', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             
-            console.log('Fetched quiz history:', response.data); // Debug log
             setQuizHistory(response.data);
         } catch (error) {
             console.error('Error fetching quiz history:', error);
@@ -610,25 +640,35 @@ export function QuizGenerator() {
                                                                 {q.question}
                                                             </p>
                                                             <div className="grid gap-3">
-                                                                {Object.entries(q.options).map(([key, value]) => (
-                                                                    <div
-                                                                        key={key}
-                                                                        className={`p-3 rounded-lg border-2 border-gray-400 transition-colors duration-200
-                                                                            ${showAnswers && key === q.correctAnswer
-                                                                                ? isDark 
-                                                                                    ? 'bg-green-900/20 border-green-500/50 text-green-300'
-                                                                                    : 'bg-green-100 border-green-500 text-green-800'
-                                                                                : isDark 
-                                                                                    ? 'bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700'
-                                                                                    : 'bg-[#ddddd5] border-gray-300 text-gray-800 hover:bg-[#cecec7]'
+                                                                {q.options && typeof q.options === 'object' ? 
+                                                                    Object.entries(q.options).map(([key, value]) => (
+                                                                        <div
+                                                                            key={key}
+                                                                            className={`p-4 rounded-lg border ${
+                                                                                showAnswers && key === q.correctAnswer
+                                                                                    ? isDark 
+                                                                                        ? 'border-green-500 bg-green-900/20' 
+                                                                                        : 'border-green-500 bg-green-100'
+                                                                                    : isDark
+                                                                                        ? 'border-gray-700 hover:border-gray-600'
+                                                                                        : 'border-gray-200 hover:border-gray-300'
                                                                             }`}
-                                                                    >
-                                                                        <div className="flex items-center gap-3">
-                                                                            <span className="font-medium">{key}.</span>
-                                                                            <span>{value}</span>
+                                                                        >
+                                                                            <div className="flex items-center gap-3">
+                                                                                <span className={`flex-shrink-0 w-6 h-6 rounded-full 
+                                                                                    ${isDark ? 'bg-gray-800' : 'bg-gray-100'} 
+                                                                                    flex items-center justify-center text-sm
+                                                                                    ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                                                                    {key}
+                                                                                </span>
+                                                                                <span className={isDark ? 'text-gray-300' : 'text-gray-700'}>
+                                                                                    {value}
+                                                                                </span>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                ))}
+                                                                    ))
+                                                                : <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>No options available</p>
+                                                                }
                                                             </div>
                                                         </div>
                                                     </div>
@@ -662,4 +702,4 @@ export function QuizGenerator() {
             </main>
         </div>
     );
-} 
+}

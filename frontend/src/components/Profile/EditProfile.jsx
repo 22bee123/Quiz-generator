@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 
-export function EditProfile() {
+export default function EditProfile() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',

@@ -3,30 +3,41 @@ import mammoth from 'mammoth';
 import fs from 'fs/promises';
 
 export function shuffleOptions(question) {
-    const options = Object.entries(question.options);
-    const correctAnswer = question.correctAnswer;
-    const correctOptionValue = question.options[correctAnswer];
+    const originalOptions = question.options;
     
-    for (let i = options.length - 1; i > 0; i--) {
+    // If options is already in the correct format, just return
+    if (typeof originalOptions === 'object' && !Array.isArray(originalOptions)) {
+        return question;
+    }
+
+    // Convert array to object with A, B, C, D keys
+    const optionsArray = Array.isArray(originalOptions) 
+        ? originalOptions 
+        : Object.values(originalOptions);
+    
+    // Create a copy of the array to shuffle
+    const shuffled = [...optionsArray];
+    for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     
-    const shuffledOptions = {};
-    const optionKeys = ['A', 'B', 'C', 'D'];
-    let newCorrectAnswer = '';
-    
-    options.forEach((option, index) => {
-        shuffledOptions[optionKeys[index]] = option[1];
-        if (option[1] === correctOptionValue) {
-            newCorrectAnswer = optionKeys[index];
-        }
+    // Convert back to object with A, B, C, D keys
+    const letters = ['A', 'B', 'C', 'D'];
+    const newOptions = {};
+    shuffled.forEach((option, index) => {
+        newOptions[letters[index]] = option;
     });
+    
+    // Find the letter key of the correct answer
+    let correctAnswerKey = Object.keys(newOptions).find(
+        key => newOptions[key] === question.correctAnswer
+    );
     
     return {
         question: question.question,
-        options: shuffledOptions,
-        correctAnswer: newCorrectAnswer
+        options: newOptions,
+        correctAnswer: correctAnswerKey
     };
 }
 
@@ -69,14 +80,12 @@ export async function extractTextFromFile(filePath, mimeType) {
     }
 }
 
-export function cleanAndParseJSON(content) {
+export const cleanAndParseJSON = (content) => {
     try {
-        content = content.replace(/```json\n?/g, '')
-                        .replace(/```\n?/g, '')
-                        .trim();
-        
-        const jsonStart = content.indexOf('{');
-        const jsonEnd = content.lastIndexOf('}');
+        // Find the first occurrence of '[' or '{'
+        const jsonStart = content.indexOf('[') !== -1 ? content.indexOf('[') : content.indexOf('{');
+        // Find the last occurrence of ']' or '}'
+        const jsonEnd = content.lastIndexOf(']') !== -1 ? content.lastIndexOf(']') : content.lastIndexOf('}');
         
         if (jsonStart === -1 || jsonEnd === -1) {
             throw new Error('No valid JSON found in response');
@@ -85,12 +94,16 @@ export function cleanAndParseJSON(content) {
         content = content.slice(jsonStart, jsonEnd + 1);
         const parsed = JSON.parse(content);
         
-        if (!parsed.questions || !Array.isArray(parsed.questions)) {
-            throw new Error('Invalid quiz format');
+        // Ensure we always return an object with a questions array
+        if (Array.isArray(parsed)) {
+            return { questions: parsed };
+        } else if (parsed.questions && Array.isArray(parsed.questions)) {
+            return parsed;
+        } else {
+            throw new Error('Invalid quiz format: missing questions array');
         }
-        
-        return parsed;
     } catch (error) {
+        console.error('Error parsing quiz JSON:', error);
         throw new Error(`Failed to parse quiz data: ${error.message}`);
     }
-} 
+}

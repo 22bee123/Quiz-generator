@@ -9,19 +9,25 @@ const __dirname = dirname(__filename);
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, '..', 'uploads');
+const filesDir = path.join(uploadsDir, 'files');
 try {
     await fs.access(uploadsDir);
 } catch {
     await fs.mkdir(uploadsDir);
 }
+try {
+    await fs.access(filesDir);
+} catch {
+    await fs.mkdir(filesDir);
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadsDir);
+        cb(null, filesDir); // Using absolute path to files directory
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + '-' + file.originalname);
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
