@@ -34,7 +34,7 @@ export default function Login() {
                 user: JSON.parse(localStorage.getItem('user'))
             }); // Debug log
             
-            navigate('/');
+            navigate('/quiz');
         } catch (error) {
             console.error('Login error:', error);
             setError(error.response?.data?.error || 'Login failed');

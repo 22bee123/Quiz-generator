@@ -155,28 +155,10 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                             <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden 
                                 ${isDark ? 'bg-[#363636] border-gray-700' : 'bg-[#cecec7] border-gray-200'} 
                                 border transition-all duration-300`}>
-                                {user?.profilePicture ? (
-                                    <img
-                                        src={`http://localhost:5000${user.profilePicture}`}
-                                        alt={user.name}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            console.error('Image failed to load:', e);
-                                            e.target.onerror = null;
-                                            e.target.src = '';
-                                            e.target.parentElement.innerHTML = `
-                                                <div class="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
-                                                     style="font-size: ${isOpen ? '1.25rem' : '0.875rem'}">
-                                                    ${user.name ? user.name[0].toUpperCase() : '?'}
-                                                </div>`;
-                                        }}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
-                                         style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
-                                        {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
-                                    </div>
-                                )}
+                                <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
+                                     style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
+                                    {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
+                                </div>
                             </div>
                             {isOpen && (
                                 <div className={isDark ? 'text-gray-200' : 'text-gray-900'}>
@@ -194,7 +176,12 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                                 : 'text-gray-600 hover:text-gray-900'} 
                                             transition-colors duration-200 block`}
                                     >
-                                        View Profile
+                                        <div className="flex items-center">
+                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                            </svg>
+                                            {isOpen && <span className="ml-2">Profile</span>}
+                                        </div>
                                     </NavLink>
                                 </div>
                             )}

@@ -10,13 +10,11 @@ export default function EditProfile() {
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
-        age: '',
-        profilePicture: ''
+        age: ''
     });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [previewImage, setPreviewImage] = useState(null);
     const navigate = useNavigate();
     const { isDark, toggleTheme } = useTheme();
 
@@ -37,13 +35,8 @@ export default function EditProfile() {
                     ...prev,
                     name: response.data.name,
                     email: response.data.email,
-                    age: response.data.age,
-                    profilePicture: response.data.profilePicture
+                    age: response.data.age
                 }));
-
-                if (response.data.profilePicture) {
-                    setPreviewImage(response.data.profilePicture);
-                }
             } catch (error) {
                 setError(error.response?.data?.error || 'Failed to load profile');
             } finally {
@@ -64,22 +57,6 @@ export default function EditProfile() {
         setSuccess('');
     };
 
-    const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            console.log('Selected file:', file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setPreviewImage(reader.result);
-                setFormData(prev => ({
-                    ...prev,
-                    profilePicture: file
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -88,32 +65,13 @@ export default function EditProfile() {
 
         try {
             const token = localStorage.getItem('token');
-            const formDataToSend = new FormData();
-
-            // Append all form data
-            formDataToSend.append('name', formData.name);
-            formDataToSend.append('email', formData.email);
-            formDataToSend.append('age', formData.age);
-            
-            if (formData.currentPassword) {
-                formDataToSend.append('currentPassword', formData.currentPassword);
-            }
-            if (formData.newPassword) {
-                formDataToSend.append('newPassword', formData.newPassword);
-            }
-            
-            // Only append profile picture if it's a File object
-            if (formData.profilePicture instanceof File) {
-                formDataToSend.append('profilePicture', formData.profilePicture);
-            }
-
             const response = await axios.put(
                 'http://localhost:5000/api/auth/profile',
-                formDataToSend,
+                formData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data',
+                        'Content-Type': 'application/json',
                     }
                 }
             );
@@ -185,68 +143,6 @@ export default function EditProfile() {
                                 {success}
                             </div>
                         )}
-
-                        <div className="space-y-4">
-                            <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                Profile Picture
-                            </h2>
-                            <div className="flex flex-col items-center space-y-4">
-                                <div className="relative">
-                                    <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-blue-500">
-                                        {previewImage ? (
-                                            <img
-                                                src={previewImage.startsWith('data:') ? previewImage : `http://localhost:5000${previewImage}`}
-                                                alt="Profile preview"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = '';
-                                                    e.target.parentElement.innerHTML = `
-                                                        <div class="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white text-2xl">
-                                                            ${formData.name ? formData.name[0].toUpperCase() : '?'}
-                                                        </div>`;
-                                                }}
-                                            />
-                                        ) : formData.profilePicture ? (
-                                            <img
-                                                src={`http://localhost:5000${formData.profilePicture}`}
-                                                alt="Current profile"
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = '';
-                                                    e.target.parentElement.innerHTML = `
-                                                        <div class="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white text-2xl">
-                                                            ${formData.name ? formData.name[0].toUpperCase() : '?'}
-                                                        </div>`;
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className={`w-full h-full flex items-center justify-center ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
-                                                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                </svg>
-                                            </div>
-                                        )}
-                                    </div>
-                                    <label className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600 transition-colors">
-                                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={handleImageChange}
-                                        />
-                                    </label>
-                                </div>
-                                <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                    Click the camera icon to upload a new profile picture
-                                </p>
-                            </div>
-                        </div>
 
                         <div className="space-y-4">
                             <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>

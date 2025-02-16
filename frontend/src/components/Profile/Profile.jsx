@@ -159,7 +159,7 @@ export default function Profile() {
                         {/* Actions */}
                         <div className="mt-8 flex justify-end space-x-4">
                             <button
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/quiz')}
                                 className={`px-4 py-2 border rounded-md transition-colors
                                     ${isDark 
                                         ? 'border-gray-600 text-gray-300 hover:bg-gray-700' 
