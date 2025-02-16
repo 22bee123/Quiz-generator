@@ -162,7 +162,7 @@ export const updateProfile = async (req, res) => {
                     console.error('Error deleting old profile picture:', error);
                 }
             }
-            user.profilePicture = `/uploads/profiles/${req.file.filename}`;
+            user.profilePicture = `/uploads/profile-pictures/${req.file.filename}`;
             console.log('New profile picture path:', user.profilePicture);
         }
 

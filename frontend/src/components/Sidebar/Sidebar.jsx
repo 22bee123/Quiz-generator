@@ -151,21 +151,31 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         </NavLink>
 
                         {/* Profile Section with key for forcing re-render */}
-                        <div key={user?.profilePicture} className="mb-4 text-center">
-                            <div className={`${isOpen ? 'w-16 h-16' : 'w-8 h-8'} rounded-full mx-auto mb-2 overflow-hidden 
-                                ${isDark ? 'bg-[#363636] border-gray-700' : 'bg-[#cecec7] border-gray-200'} 
-                                border transition-all duration-300`}>
-                                <div className="w-full h-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white"
-                                     style={{ fontSize: isOpen ? '1.25rem' : '0.875rem' }}>
-                                    {loading ? '...' : (user?.name ? user.name[0].toUpperCase() : '?')}
-                                </div>
+                        <div key={user?.profilePicture} className="mb-4 text-center flex items-center justify-center flex-col">
+                            {/* Profile Picture */}
+                            <div className="w-20 h-20 rounded-full overflow-hidden bg-white/20">
+                                {user?.profilePicture ? (
+                                    <img
+                                        src={`http://localhost:5000${user.profilePicture}`}
+                                        alt={user.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-xl font-bold">
+                                        {user?.name?.[0]?.toUpperCase()}
+                                    </div>
+                                )}
                             </div>
                             {isOpen && (
                                 <div className={isDark ? 'text-gray-200' : 'text-gray-900'}>
-                                    <h3 className="font-medium text-sm">
+                                    <h3 className="font-medium text-md mt-2">
                                         {loading ? 'Loading...' : (user?.name || 'Guest')}
                                     </h3>
-                                    <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <p className={`text-md ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                         {user?.userType || 'Student'}
                                     </p>
                                     <NavLink 
@@ -176,11 +186,11 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                                 : 'text-gray-600 hover:text-gray-900'} 
                                             transition-colors duration-200 block`}
                                     >
-                                        <div className="flex items-center">
+                                        <div className="flex items-center mt-8">
                                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                             </svg>
-                                            {isOpen && <span className="ml-2">Profile</span>}
+                                            {isOpen && <span className="ml-1">Profile</span>}
                                         </div>
                                     </NavLink>
                                 </div>

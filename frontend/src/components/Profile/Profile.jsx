@@ -87,6 +87,10 @@ export default function Profile() {
                                         src={`http://localhost:5000${user.profilePicture}`}
                                         alt={user.name}
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+                                        }}
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-4xl font-bold">

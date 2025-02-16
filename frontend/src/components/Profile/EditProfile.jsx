@@ -12,6 +12,8 @@ export default function EditProfile() {
         confirmPassword: '',
         age: ''
     });
+    const [profilePicture, setProfilePicture] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -37,6 +39,10 @@ export default function EditProfile() {
                     email: response.data.email,
                     age: response.data.age
                 }));
+                
+                if (response.data.profilePicture) {
+                    setPreviewUrl(`http://localhost:5000${response.data.profilePicture}`);
+                }
             } catch (error) {
                 setError(error.response?.data?.error || 'Failed to load profile');
             } finally {
@@ -57,6 +63,14 @@ export default function EditProfile() {
         setSuccess('');
     };
 
+    const handleProfilePictureChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setProfilePicture(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -65,13 +79,26 @@ export default function EditProfile() {
 
         try {
             const token = localStorage.getItem('token');
+            
+            // Create FormData to handle file upload
+            const submitData = new FormData();
+            Object.keys(formData).forEach(key => {
+                if (formData[key]) {
+                    submitData.append(key, formData[key]);
+                }
+            });
+            
+            if (profilePicture) {
+                submitData.append('profilePicture', profilePicture);
+            }
+
             const response = await axios.put(
                 'http://localhost:5000/api/auth/profile',
-                formData,
+                submitData,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'multipart/form-data',
                     }
                 }
             );
@@ -83,9 +110,6 @@ export default function EditProfile() {
             
             // Dispatch the userUpdated event to notify other components
             window.dispatchEvent(new Event('userUpdated'));
-            
-            // Optional: Navigate to profile page after successful update
-            // navigate('/profile');
             
         } catch (error) {
             console.error('Update error:', error);
@@ -143,6 +167,43 @@ export default function EditProfile() {
                                 {success}
                             </div>
                         )}
+
+                        <div className="mb-8 text-center">
+                            <label className="block text-lg font-semibold mb-4">
+                                Profile Picture
+                            </label>
+                            <div className="flex flex-col items-center space-y-4">
+                                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200 border-4 border-blue-500">
+                                    {previewUrl ? (
+                                        <img
+                                            src={previewUrl}
+                                            alt="Profile preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-5xl font-bold text-gray-400">
+                                            {formData.name?.[0]?.toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleProfilePictureChange}
+                                    className="hidden"
+                                    id="profile-picture-input"
+                                />
+                                <label
+                                    htmlFor="profile-picture-input"
+                                    className="cursor-pointer inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    Choose New Picture
+                                </label>
+                            </div>
+                        </div>
 
                         <div className="space-y-4">
                             <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
