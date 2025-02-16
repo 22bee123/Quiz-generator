@@ -41,7 +41,7 @@ export default function Register() {
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
             
-            navigate('/login');
+            navigate('/quiz');
         } catch (error) {
             console.error('Registration error:', error);
             setError(error.response?.data?.error || error.message || 'Registration failed');

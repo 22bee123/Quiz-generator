@@ -103,10 +103,10 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed left-0 top-0 h-full transition-all duration-300 z-30
+            <div className={`fixed left-0 top-0 h-screen transition-all duration-300 z-30 sidebar-content
                 ${isDark ? 'bg-[#262626] border-gray-700' : 'bg-[#ddddd5] border-gray-200'} 
                 border-r
-                ${isOpen ? 'w-64' : 'w-12'}
+                ${isOpen ? 'w-75' : 'w-12'}
                 ${!isOpen && 'translate-x-0'}
                 md:translate-x-0`}
             >
@@ -114,12 +114,12 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     {/* Toggle Button */}
                     <button 
                         onClick={toggleSidebar}
-                        className={`${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} 
+                        className={`${isDark ? 'text-gray-400 hover:text-green-500' : 'text-gray-600 hover:text-gray-900'} 
                             transition-colors duration-200 mb-4
                             ${isOpen ? 'ml-auto' : 'mx-auto'}`}
                     >
                         {isOpen ? (
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                             </svg>
                         ) : (
@@ -130,7 +130,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     </button>
 
                     {/* Navigation */}
-                    <div className="flex-1 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    <div className="flex-1 overflow-hidden">
                         <NavLink
                             to="/"
                             className={({ isActive }) =>
@@ -175,7 +175,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                     <h3 className="font-medium text-md mt-2">
                                         {loading ? 'Loading...' : (user?.name || 'Guest')}
                                     </h3>
-                                    <p className={`text-md ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                                    <p className={`text-md ${isDark ? 'text-gray-400' : 'text-black'}`}>
                                         {user?.userType || 'Student'}
                                     </p>
                                     <NavLink 
@@ -183,7 +183,7 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                         className={`mt-2 text-base font-medium 
                                             ${isDark 
                                                 ? 'text-gray-400 hover:text-white' 
-                                                : 'text-gray-600 hover:text-gray-900'} 
+                                                : 'text-black hover:text-gray-900'} 
                                             transition-colors duration-200 block`}
                                     >
                                         <div className="flex items-center mt-8">
@@ -209,52 +209,53 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         </div>
 
                         {/* Quiz History */}
-                        <div className="px-1 flex flex-col items-center flex-grow h-[calc(100vh-300px)]">
-                            {isOpen && (
-                                <h3 className={`text-md pt-5 font-semibold uppercase tracking-wider mb-2 text-center w-full
-                                    ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                        {isOpen && (
+                            <div className="flex flex-col">
+                                {/* Fixed header */}
+                                <h3 className={`text-md font-semibold uppercase tracking-wider mb-2 text-center w-full
+                                    ${isDark ? 'text-gray-400' : 'text-black'}`}>
                                     Recent Quizzes:
                                 </h3>
                                 
-                            )}
-                            
-                            <div className="space-y-1 w-full flex flex-col i h-full overflow-y-auto overflow-x-hidden
+                                {/* Scrollable quiz list */}
+                                <div className="quiz-history-scroll space-y-1 w-full flex flex-col
                                     scrollbar-thin scrollbar-thumb-rounded-full
                                     scrollbar-track-transparent
                                     hover:scrollbar-thumb-gray-500/30
                                     dark:hover:scrollbar-thumb-gray-400/30">
-                                {quizHistory && quizHistory.length > 0 ? (
-                                    quizHistory.map((quiz) => (
-                                        <button
-                                            key={quiz.id}
-                                            onClick={() => handleQuizClick(quiz)}
-                                            title={!isOpen ? quiz.topic : ''}
-                                            className={`flex items-center p-2 rounded-lg transition-colors duration-200 w-full
-                                                ${isDark 
-                                                    ? 'text-gray-400 hover:bg-[#363636] hover:text-white' 
-                                                    : 'text-gray-600 hover:bg-[#cecec7] hover:text-gray-900'}`}
-                                        >
-                                            {isOpen ? (
-                                                <div className="flex flex-col items-start">
-                                                    <span className="text-sm font-bold truncate">{quiz.topic}</span>
-                                                    <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-600'}`}>
-                                                        {formatDate(quiz.createdAt)}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex justify-center w-full">
-                                                    <span className="text-sm">{quiz.topic.charAt(0).toUpperCase()}</span>
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} text-center py-2`}>
-                                        {isOpen ? 'No quizzes yet' : '−'}
-                                    </div>
-                                )}
+                                    {quizHistory && quizHistory.length > 0 ? (
+                                        quizHistory.map((quiz) => (
+                                            <button
+                                                key={quiz.id}
+                                                onClick={() => handleQuizClick(quiz)}
+                                                title={!isOpen ? quiz.topic : ''}
+                                                className={`flex items-center p-2 rounded-lg transition-colors duration-200 w-full
+                                                    ${isDark 
+                                                        ? 'text-gray-400 hover:bg-[#363636] hover:text-white' 
+                                                        : 'text-gray-600 hover:bg-[#cecec7] hover:text-gray-900'}`}
+                                            >
+                                                {isOpen ? (
+                                                    <div className="flex flex-col items-start">
+                                                        <span className="text-sm font-bold truncate">{quiz.topic}</span>
+                                                        <span className={`text-xs ${isDark ? 'text-green-500' : 'text-black'}`}>
+                                                            {formatDate(quiz.createdAt)}
+                                                        </span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex justify-center w-full">
+                                                        <span className="text-sm">{quiz.topic.charAt(0).toUpperCase()}</span>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'} text-center py-2`}>
+                                            {isOpen ? 'No quizzes yet' : '−'}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Logout Button */}
@@ -262,8 +263,8 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                         onClick={handleLogout}
                         className={`mt-2 flex items-center justify-center p-2 rounded-lg transition-all duration-200 delay-200
                             ${isDark 
-                                ? 'text-gray-400 hover:text-white hover:bg-green-600' 
-                                : 'text-gray-600 hover:text-white hover:bg-green-500'}`}
+                                ? 'text-gray-400 hover:text-white hover:bg-red-600' 
+                                : 'text-gray-600 hover:text-white hover:bg-black'}`}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
