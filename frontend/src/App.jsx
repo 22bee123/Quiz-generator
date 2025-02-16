@@ -15,6 +15,7 @@ function PrivateRoute({ children }) {
 function App() {
     return (
         <ThemeProvider>
+<<<<<<< Updated upstream
             <Router>
                 <Routes>
                     <Route path="/home" element={<Home />} />
@@ -38,6 +39,40 @@ function App() {
                     } />
                 </Routes>
             </Router>
+=======
+            <ErrorBoundary>
+                <Router>
+                    <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+
+                        <Route path="/menu" element={
+                            <PrivateRoute>
+                                <ErrorBoundary>
+                                    <QuizGenerator />
+                                </ErrorBoundary>
+                            </PrivateRoute>
+                        } />
+                        <Route path="/profile" element={
+                            <PrivateRoute>
+                                <ErrorBoundary>
+                                    <Profile />
+                                </ErrorBoundary>
+                            </PrivateRoute>
+                        } />
+                        <Route path="/edit-profile" element={
+                            <PrivateRoute>
+                                <ErrorBoundary>
+                                    <EditProfile />
+                                </ErrorBoundary>
+                            </PrivateRoute>
+                        } />
+                        <Route path="*" element={<Navigate to="/" replace />} />
+                    </Routes>
+                </Router>
+            </ErrorBoundary>
+>>>>>>> Stashed changes
         </ThemeProvider>
     );
 }

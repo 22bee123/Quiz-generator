@@ -166,11 +166,11 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                     </p>
                                     <NavLink 
                                         to="/profile"
-                                        className={`mt-2 text-base font-medium 
+                                        className={`mt-2 text-base font-medium block rounded-lg px-4 py-2 w-full text-center
                                             ${isDark 
-                                                ? 'text-gray-400 hover:text-white' 
-                                                : 'text-gray-600 hover:text-gray-900'} 
-                                            transition-colors duration-200 block`}
+                                                ? 'text-gray-400 hover:text-white hover:bg-green-600' 
+                                                : 'text-gray-600 hover:text-white hover:bg-green-500'} 
+                                            transition-all duration-200`}
                                     >
                                         View Profile
                                     </NavLink>
@@ -196,14 +196,24 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                                     ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                                     Recent Quizzes:
                                 </h3>
-                                
                             )}
+<<<<<<< Updated upstream
                             
                             <div className="space-y-1 w-full flex flex-col items-center h-full overflow-y-auto overflow-x-hidden
                                     scrollbar-thin scrollbar-thumb-rounded-full
                                     scrollbar-track-transparent
                                     hover:scrollbar-thumb-gray-500/30
                                     dark:hover:scrollbar-thumb-gray-400/30">
+=======
+                        
+                        {/*Slidebar*/}
+                            <div className="space-y-1 w-full flex flex-col h-full overflow-y-auto overflow-x-hidden
+                                [&::-webkit-scrollbar]:w-2
+                                [&::-webkit-scrollbar-track]:bg-transparent
+                                [&::-webkit-scrollbar-thumb]:bg-green-500
+                                [&::-webkit-scrollbar-thumb]:rounded-full
+                                [&::-webkit-scrollbar-thumb]:hover:bg-green-600">
+>>>>>>> Stashed changes
                                 {quizHistory && quizHistory.length > 0 ? (
                                     quizHistory.map((quiz) => (
                                         <button
@@ -241,10 +251,15 @@ export function Sidebar({ quizHistory, onQuizSelect, onSidebarToggle }) {
                     {/* Logout Button */}
                     <button
                         onClick={handleLogout}
+<<<<<<< Updated upstream
                         className={`mt-2 flex items-center justify-center p-2 rounded-lg transition-all duration-200
                             ${isDark 
                                 ? 'text-gray-400 hover:text-white hover:bg-green-600' 
                                 : 'text-gray-600 hover:text-white hover:bg-green-500'}`}
+=======
+                        className="mt-2 flex items-center justify-center px-4 py-2 rounded-lg w-full
+                            text-white bg-[#262626] cursor-pointer"
+>>>>>>> Stashed changes
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

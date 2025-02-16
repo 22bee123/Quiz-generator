@@ -34,7 +34,7 @@ export function Login() {
                 user: JSON.parse(localStorage.getItem('user'))
             }); // Debug log
             
-            navigate('/');
+            navigate('/menu');
         } catch (error) {
             console.error('Login error:', error);
             setError(error.response?.data?.error || 'Login failed');
